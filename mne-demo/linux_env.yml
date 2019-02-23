@@ -31,9 +31,9 @@ dependencies:
 - pyface>=6
 - traitsui>=6
 - testpath<0.4
-- pyqt5>=5.10
 - pip:
   - mne
+  - pyqt5>=5.10
   - vtk
   - https://api.github.com/repos/enthought/mayavi/zipball/226189a6ad3dc3c01d031ef21d0d0cde554ac851
   - PySurfer[save_movie]
