@@ -32,11 +32,14 @@ seconds of data.
 #
 # License: BSD Style.
 
+# NOTE: To get this to build, you need to be on mne >= 0.18.
+#       To upgrade to 0.18.dev0, run `pip install --upgrade --no-deps git+https://github.com/mne-tools/mne-python.git`
+#       while in your mne conda environment
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 import mne
-from mne.datasets.
 from mne.datasets.sleep_physionet.age import fetch_data
 from mne.time_frequency import psd_array_welch
 
