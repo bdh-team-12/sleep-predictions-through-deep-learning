@@ -75,9 +75,10 @@ from sklearn.preprocessing import FunctionTransformer
 # Read the PSG data and Hypnograms to create a raw object
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ALICE, BOB = 0, 1
+SUBJECTS = [0, 1]
+ALL_SUBJECTS = list(range(20))
 
-[alice_files, bob_files] = fetch_data(subjects=[ALICE, BOB], recording=[1])
+[alice_files, bob_files] = fetch_data(subjects=SUBJECTS, recording=[1])
 
 mapping = {'EOG horizontal': 'eog',
            'Resp oro-nasal': 'misc',
@@ -116,6 +117,7 @@ annotation_desc_2_event_id = {'Sleep stage W': 1,
                               'Sleep stage 4': 4,
                               'Sleep stage R': 5}
 
+# Each row of events_train: [timestamp, 0, event_id]
 events_train, _ = mne.events_from_annotations(
     raw_train, event_id=annotation_desc_2_event_id, chunk_duration=30.)
 
@@ -139,6 +141,7 @@ stage_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 tmax = 30. - 1. / raw_train.info['sfreq']  # tmax in included
 
+# An epoch can store the number of total event instances on raw data, and bin them by name
 epochs_train = mne.Epochs(raw=raw_train, events=events_train,
                           event_id=event_id, tmin=0., tmax=tmax, baseline=None)
 
@@ -185,9 +188,11 @@ for ax, title, epochs in zip([ax1, ax2],
                                fmin=0.1, fmax=20.)
     ax.set_title(title)
 
-plt.xlabel('Frequency (Hz)')
-plt.ylabel('uV^2/hz (dB)')
-plt.legend(list(event_id.keys()))
+    ax.set_xlabel('Frequency (Hz)')
+    ax.set_ylabel('uV^2/hz (dB)')
+    ax.legend(list(event_id.keys()))
+
+fig.show()
 
 ##############################################################################
 # Design a scikit-learn transformer from a Python function
