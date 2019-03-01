@@ -49,6 +49,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer
+from sklearn.model_selection import train_test_split
 
 ##############################################################################
 # Load the data
@@ -95,6 +96,20 @@ raw_train.set_channel_types(mapping)
 # plot some data
 raw_train.plot(duration=60, scalings='auto')
 
+
+# With ALL data
+all_files_first_night = fetch_data(subjects=ALL_SUBJECTS, recording=[1])
+all_raw_edf = []
+
+for file in all_files_first_night:
+    raw = mne.io.read_raw_edf(file[0])
+    annot = mne.read_annotations(file[1])
+
+    raw.set_annotations(annot, emit_warning=False)
+    raw.set_channel_types(mapping)
+
+    all_raw_edf.append(raw)
+
 ##############################################################################
 # Extract 30s events from annotations
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,6 +150,12 @@ mne.viz.plot_events(events_train, event_id=event_id,
 # keep the color-code for further plotting
 stage_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
+# With ALL data
+all_events = []
+for raw_sample in all_raw_edf:
+    events, _ = mne.events_from_annotations(raw_sample, event_id=annotation_desc_2_event_id, chunk_duration=30.)
+    all_events.append(events)
+
 ##############################################################################
 # Create Epochs from the data based on the events found in the annotations
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,6 +167,12 @@ epochs_train = mne.Epochs(raw=raw_train, events=events_train,
                           event_id=event_id, tmin=0., tmax=tmax, baseline=None)
 
 print(epochs_train)
+
+all_epochs = []
+for (raw, events) in zip(all_raw_edf, all_events):
+    epochs = mne.Epochs(raw=raw, events=events, event_id=event_id,
+                        tmin=0, tmax=tmax, baseline=None)
+    all_epochs.append(epochs)
 
 ##############################################################################
 # Applying the same steps to the test data from Bob
@@ -275,6 +302,37 @@ acc = accuracy_score(y_test, y_pred)
 
 print("Accuracy score: {}".format(acc))
 
+# Attempt similar model with cross-fold validation, sample size 20, 4 folds
+
+# X_train, X_test, y_train, y_test = train_test_split(
+# ...     iris.data, iris.target, test_size=0.4, random_state=0)
+
+all_data = []
+all_target = []
+for epochs in all_epochs:
+    events = epochs.events
+    all_data.append(epochs)
+    targets = events[:, 2]
+    all_target.append(targets)
+
+test_size = 5/20
+
+X_train, X_test, y_train, y_test = train_test_split(all_data, all_target, test_size=0.4, random_state=0)
+
+all_pipe = make_pipeline(FunctionTransformer(eeg_power_band, validate=False),
+                         RandomForestClassifier(n_estimators=50, random_state=42, warm_start=True))
+
+for (X, y) in zip(X_train, y_train):
+    all_pipe.fit(X, y)
+
+accs = []
+for (Xt, yt) in zip(X_test, y_test):
+    yp = all_pipe.predict(Xt)
+    acc = accuracy_score(yt, yp)
+    accs.append(acc)
+
+print("Accuracy scores for cross validation: {}".format(accs))
+
 ##############################################################################
 # In short, yes. We can predict Bob's sleeping stages based on Alice's data.
 #
@@ -288,7 +346,7 @@ print(confusion_matrix(y_test, y_pred))
 ##############################################################################
 #
 
-print(classification_report(y_test, y_pred, target_names=event_id.keys()))
+print(classification_report(y_test, y_pred, target_names=list(event_id.keys())))
 
 ##############################################################################
 # Exercise
