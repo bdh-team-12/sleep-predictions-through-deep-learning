@@ -1,6 +1,7 @@
 import mne
 from mne.time_frequency import psd_array_welch
 from shhs.parser import xml_nsrr as xn
+import numpy as np
 
 # To make mne.Annotations, we'll need 3 arrays of equal length
 # 1: onset
@@ -19,14 +20,26 @@ onset, duration, description = _read_annotations_edf(fname)
 """
 
 
-def annotations_from_nsrr_xml(xml_file_path):
+def annotation_components_from_nsrr_xml(xml_file_path):
     stages_elements = xn.parse_nsrr_sleep_stages(xml_file_path)
 
     stage = [elem.find('EventConcept').text for elem in stages_elements]
     onset = [elem.find('Start').text for elem in stages_elements]
     duration = [elem.find('Duration').text for elem in stages_elements]
 
+    onset = np.array(onset, dtype=float)
+    duration = np.array(duration, dtype=float)
+
     return stage, onset, duration
+
+
+def annotations_from_nsrr_xml(xml_file_path):
+    stage, onset, duration = annotation_components_from_nsrr_xml(xml_file_path)
+    annotations = mne.Annotations(onset=onset, duration=duration,
+                                  description=stage,
+                                  orig_time=None)
+
+    return annotations
 
 
 if __name__ == "__main__":
