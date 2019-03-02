@@ -19,10 +19,10 @@ mapping = {'EOG horizontal': 'eog',
            'Event marker': 'misc'}
 
 FREQ_BANDS = {"delta": [0.5, 4.5],
-                  "theta": [4.5, 8.5],
-                  "alpha": [8.5, 11.5],
-                  "sigma": [11.5, 15.5],
-                  "beta": [15.5, 30]}
+              "theta": [4.5, 8.5],
+              "alpha": [8.5, 11.5],
+              "sigma": [11.5, 15.5],
+              "beta": [15.5, 30]}
 
 EEG_CHANNELS = ["EEG Fpz-Cz", "EEG Pz-Oz"]
 
@@ -56,24 +56,26 @@ def fetch_subjects_from_sleep_physionet():
     return all_raw_edf
 
 
-def extract_events_from_raw_edfs(raw_edfs):
-    all_events = []
-    for raw_sample in raw_edfs:
-        events, _ = mne.events_from_annotations(raw_sample, event_id=annotation_desc_2_event_id, chunk_duration=30.)
-        all_events.append(events)
+def extract_events_from_raw_edf_samples(raw_edf_samples, event_chunk_duration=30.):
+    all_event_samples = []
+    for raw_sample in raw_edf_samples:
+        event_sample, _ = mne.events_from_annotations(raw_sample,
+                                                      event_id=annotation_desc_2_event_id,
+                                                      chunk_duration=event_chunk_duration)
+        all_event_samples.append(event_sample)
 
-    return all_events
+    return all_event_samples
 
 
-def extract_epochs(raw_edfs, events):
-    all_epochs = []
-    for (raw, events) in zip(raw_edfs, events):
-        t_max = 30. - 1. / raw.info['sfreq']
-        epochs = mne.Epochs(raw=raw, events=events, event_id=event_id,
+def extract_epochs(raw_edf_samples, event_samples):
+    all_epoch_samples = []
+    for (raw_sample, event_sample) in zip(raw_edf_samples, event_samples):
+        t_max = 30. - 1. / raw_sample.info['sfreq']
+        epoch_sample = mne.Epochs(raw=raw_sample, events=event_sample, event_id=event_id,
                             tmin=0, tmax=t_max, baseline=None)
-        all_epochs.append(epochs)
+        all_epoch_samples.append(epoch_sample)
 
-    return all_epochs
+    return all_epoch_samples
 
 
 def eeg_power_band(epochs):
@@ -110,26 +112,26 @@ def eeg_power_band(epochs):
     return np.concatenate(X, axis=1)
 
 
-def generate_power_band_data_from_epochs(epochs):
+def generate_power_band_data_from_epochs(epoch_samples):
     all_data = []
     all_target = []
-    for epoch in epochs:
+    for epoch in epoch_samples:
         data = eeg_power_band(epoch)
         all_data.append(data)
 
-        events = epoch.events
-        targets = events[:, 2]
+        epoch_events = epoch.events
+        targets = epoch_events[:, 2]
         all_target.append(targets)
 
     return all_data, all_target
 
 
-def train_random_forest_classifier(X, y):
-    rfc = RandomForestClassifier(n_estimators=50, random_state=42, warm_start=True)
+def train_random_forest_classifier(X_samples, y_samples, estimators_per_sample=50):
+    rfc = RandomForestClassifier(n_estimators=estimators_per_sample, random_state=42, warm_start=True)
 
-    for (X_sample, y_sample) in zip(X, y):
+    for (X_sample, y_sample) in zip(X_samples, y_samples):
         rfc.fit(X_sample, y_sample)
-        rfc.n_estimators += 50
+        rfc.n_estimators += estimators_per_sample
 
     return rfc
 
@@ -145,9 +147,9 @@ def test_random_forest_classifier(rfc, X, y):
 
 
 if __name__ == "__main__":
-    raw_edfs = fetch_subjects_from_sleep_physionet()
-    events = extract_events_from_raw_edfs(raw_edfs)
-    epochs = extract_epochs(raw_edfs, events)
+    raw_edf_samples = fetch_subjects_from_sleep_physionet()
+    events = extract_events_from_raw_edf_samples(raw_edf_samples)
+    epochs = extract_epochs(raw_edf_samples, events)
 
     X, y = generate_power_band_data_from_epochs(epochs)
 
