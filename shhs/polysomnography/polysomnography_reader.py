@@ -58,12 +58,12 @@ if __name__ == "__main__":
     raw.set_annotations(annotations)
 
     events, _ = sleep_stage_events(raw)
-
     event_id = {'Sleep stage W': 1,
                 'Sleep stage 1': 2,
                 'Sleep stage 2': 3,
                 'Sleep stage 3': 4,
                 'Sleep stage R': 5}
+    epochs = sleep_stage_epochs(raw=raw, events=events, event_id=event_id).load_data()
 
     # plot events
     ratio = 2.5
@@ -92,8 +92,6 @@ if __name__ == "__main__":
     fig.show()
 
     # Get spectral density plot
-    epochs = sleep_stage_epochs(raw=raw, events=events, event_id=event_id).load_data()
-
     plot_epochs = epochs.pick(['EEG'])
 
     for stage, color in zip(event_id.keys(), stage_colors[0:5]):
