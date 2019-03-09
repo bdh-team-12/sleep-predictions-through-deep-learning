@@ -2,20 +2,8 @@ import matplotlib.pyplot as plt
 from shhs.polysomnography import polysomnography_reader as pr
 import mne
 
-if __name__ == "__main__":
-    edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1/shhs1-200001.edf"
-    ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1/shhs1-200001-nsrr.xml"
 
-    raw = pr.annotated_raw_edf(edf_file_path=edf_path, annotations_file_path=ann_path)
-
-    events, event_id = pr.sleep_stage_events(raw)
-    epochs = pr.sleep_stage_epochs(raw=raw, events=events, event_id=event_id).load_data()
-
-    # plot events
-    ratio = 2.5
-    h = 3
-    w = h * ratio
-
+def plot_sleep_stages_and_psd(raw, events, epochs, event_id):
     fig = plt.figure()
     ax1 = plt.subplot2grid((2, 2), (0, 0), rowspan=1)
     ax2 = plt.subplot2grid((2, 2), (0, 1), rowspan=1)
@@ -46,5 +34,18 @@ if __name__ == "__main__":
 
     fig.tight_layout()
     fig.show()
+
+
+if __name__ == "__main__":
+    edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1/shhs1-200001.edf"
+    ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1/shhs1-200001-nsrr.xml"
+
+    raw = pr.annotated_raw_edf(edf_file_path=edf_path, annotations_file_path=ann_path)
+
+    events, event_id = pr.sleep_stage_events(raw)
+    epochs = pr.sleep_stage_epochs(raw=raw, events=events, event_id=event_id).load_data()
+
+    # plot events
+    plot_sleep_stages_and_psd(raw, events, epochs, event_id)
 
     print("done")
