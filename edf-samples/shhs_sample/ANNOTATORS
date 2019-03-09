@@ -1,5 +1,0 @@
-comp	composite (hypn, arou, resp, oart)
-hypn	sleep stage annotations
-arou	EEG arousals
-resp	respiratory events
-oart	oximeter artifacts
