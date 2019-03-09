@@ -47,3 +47,10 @@ def sleep_stage_epochs(raw, events, event_id, tmin=None, tmax=None, baseline=Non
                         tmin=tmin, tmax=tmax,
                         baseline=baseline)
     return epochs
+
+
+def annotated_raw_edf(edf_file_path, annotations_file_path):
+    raw = mne.io.read_raw_edf(edf_file_path)
+    annotations = nsrr_sleep_stage_annotations(annotations_file_path)
+    raw.set_annotations(annotations)
+    return raw

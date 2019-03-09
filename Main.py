@@ -4,18 +4,11 @@ import mne
 
 if __name__ == "__main__":
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1/shhs1-200001.edf"
-    file_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1/shhs1-200001-nsrr.xml"
+    ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1/shhs1-200001-nsrr.xml"
 
-    raw = mne.io.read_raw_edf(edf_path)
-    annotations = pr.nsrr_sleep_stage_annotations(file_path)
-    raw.set_annotations(annotations)
+    raw = pr.annotated_raw_edf(edf_file_path=edf_path, annotations_file_path=ann_path)
 
-    events, _ = pr.sleep_stage_events(raw)
-    event_id = {'Sleep stage W': 1,
-                'Sleep stage 1': 2,
-                'Sleep stage 2': 3,
-                'Sleep stage 3': 4,
-                'Sleep stage R': 5}
+    events, event_id = pr.sleep_stage_events(raw)
     epochs = pr.sleep_stage_epochs(raw=raw, events=events, event_id=event_id).load_data()
 
     # plot events
