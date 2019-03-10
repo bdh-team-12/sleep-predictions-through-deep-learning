@@ -56,7 +56,7 @@ def annotated_raw_edf(edf_file_path, annotations_file_path):
     return raw
 
 
-def eeg_power_band(epochs):
+def eeg_power_band(epochs, channel):
     """EEG relative power band feature extraction.
 
     This function takes an ``mne.Epochs`` object and creates EEG features based
@@ -88,10 +88,8 @@ def eeg_power_band(epochs):
                   "sigma": [11.5, 15.5],
                   "beta": [15.5, 30]}
 
-    EEG_CHANNELS = ["EEG", "EEG(sec)"]
-
     sfreq = epochs.info['sfreq']
-    data = epochs.load_data().pick_channels(EEG_CHANNELS).get_data()
+    data = epochs.load_data().pick_channels([channel]).get_data()
     psds, freqs = mne.time_frequency.psd_array_welch(data, sfreq, fmin=0.5, fmax=30.,
                                                      n_fft=512, n_overlap=256)
     # Normalize the PSDs
