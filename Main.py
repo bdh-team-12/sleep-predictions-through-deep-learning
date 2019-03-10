@@ -45,6 +45,8 @@ if __name__ == "__main__":
     events, event_id = pr.sleep_stage_events(raw)
     epochs = pr.sleep_stage_epochs(raw=raw, events=events, event_id=event_id).load_data()
 
+    power_band = pr.eeg_power_band(epochs)
+
     # plot events
     plot_sleep_stages_and_psd(raw, events, epochs, event_id)
 

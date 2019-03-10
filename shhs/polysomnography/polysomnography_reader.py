@@ -63,7 +63,13 @@ def eeg_power_band(epochs):
     on relative power in specific frequency bands that are compatible with
     scikit-learn.
 
-    Taken from https://martinos.org/mne/dev/auto_tutorials/plot_sleep.html
+    Function implementation taken from https://martinos.org/mne/dev/auto_tutorials/plot_sleep.html
+
+    Excerpt taken from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2824445/ :
+        Choose frequency bands. Common frequency bands are low delta 0.3-1 Hz, delta 1-4 Hz , theta 4-8 Hz,
+        alpha 8-12 Hz, sigma 12-15 Hz, and beta 15-30 Hz. Depending on the focus of the study, it may be desirable to
+        break these down into narrower bands, such as 1-2, 2-3, and 3-4 Hz. The true band limits will usually be
+        different than these nominal values.
 
     Parameters
     ----------
@@ -82,7 +88,7 @@ def eeg_power_band(epochs):
                   "sigma": [11.5, 15.5],
                   "beta": [15.5, 30]}
 
-    EEG_CHANNELS = ["EEG Fpz-Cz", "EEG Pz-Oz"]
+    EEG_CHANNELS = ["EEG", "EEG(sec)"]
 
     sfreq = epochs.info['sfreq']
     data = epochs.load_data().pick_channels(EEG_CHANNELS).get_data()
