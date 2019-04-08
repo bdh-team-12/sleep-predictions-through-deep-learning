@@ -1,8 +1,0 @@
-# Alternatively, run `conda install -c conda-forge pyedflib`
-name: edflib
-dependencies:
-  - python=3.7.*
-  - numpy=1.16.*
-  - pandas=0.24.*
-  - Cython=0.29.*
-  - pyedflib=0.1.*
