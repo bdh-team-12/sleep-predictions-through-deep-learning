@@ -91,16 +91,17 @@ def eeg_power_band(epochs, channels):
                   "sigma": [11.5, 15.5],
                   "beta": [15.5, 30]}
 
-    sfreq = epochs.info['sfreq']
+    sampling_freq = epochs.info['sfreq']
     data = epochs.load_data().pick_channels(channels).get_data()
-    psds, freqs = mne.time_frequency.psd_array_welch(data, sfreq, fmin=0.5, fmax=30.,
+    psds, freqs = mne.time_frequency.psd_array_welch(data, sampling_freq, fmin=0.5, fmax=30.,
                                                      n_fft=512, n_overlap=256)
-    # Normalize the PSDs
+    # psds: [# epochs x 1 x # freq bins]
+    # Each element in psds y = [x, :, :] is a  [1 x #_freq_bins] array containing the number of times each frequency
+    # was observed.
+    #
+    # freqs: [# freq bins x 1], where each value is the median for the frequency bin
+
+    # Normalize the PSDs so that each element y = [x, :, :] is normalized to sum to 1
     psds /= np.sum(psds, axis=-1, keepdims=True)
 
-    X = []
-    for _, (fmin, fmax) in FREQ_BANDS.items():
-        psds_band = psds[:, :, (freqs >= fmin) & (freqs < fmax)].mean(axis=-1)
-        X.append(psds_band.reshape(len(psds), -1))
-
-    return np.concatenate(X, axis=1)
+    return psds
