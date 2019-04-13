@@ -1,0 +1,23 @@
+"alcoh","cgpkyr","hi201a","hi201b","hi201c","hi201d","hi201e","hi216","htnderv_s1","htnderv_s2","parrptdiab","srhype","age_category_s1","age_category_s2","age_s1","age_s2","educat","ethnicity","gender","mstat","nsrrid","pptid","race","ace1","ace2","aced1","aced2","anar1a1","anar1b1","anar1c1","anar31","benzod1","benzod2","beta1","beta2","betad1","betad2","ccb1","diur2","diuret1","htnmed1","htnmed2","insuln1","insuln2","istrd1","istrd2","lipid1","lipid2","mlpd2","nsaid1","ntca1","ntg1","oaia2","ohga1","ohga2","ostrd1","ostrd2","tca1","tca2","bmi_s1","bmi_s2","height","hip","pm202","pm207","waist","weight","avg23bpd_s2","avg23bps_s2","diasbp","systbp","chol","hdl","trig","fev1","fvc","ai_all","avgsat","minsat","ahi_a0h3","ahi_a0h3a","ahi_a0h4","ahi_a0h4a","ahi_c0h3","ahi_c0h3a","ahi_c0h4","ahi_c0h4a","ahi_o0h3","ahi_o0h3a","ahi_o0h4","ahi_o0h4a","cai0p","oahi","oai0p","rdi0p","rdi3p","rdi3pa","rdi4p","rdinr3p","rdirem3p","overall_shhs2","nsupinep","pctlt75","pctlt80","pctlt85","pctlt90","slp_eff","slp_lat","slpprdp","slptime","supinep","times34p","timest1p","timest2p","waso"
+
+
+history
+'alcoh', 'cgpkyr', 'htnderv_s1', 'parrptdiab', 'srhype', 
+
+
+patient
+'age_category_s1', 'age_s1', 'educat', 'ethnicity', 'gender', 'mstat',
+'nsrrid', 'pptid', 'race', 
+
+medicatoins
+'ace1', 'aced1', 'anar1a1', 'anar1b1', 'anar1c1', 'anar31', 'benzod1', 'beta1', 'betad1', 'ccb1', 'diu
+ret1', 'htnmed1', 'insuln1', 'istrd1', 'lipid1', 'nsaid1', 'ntca1', 'ntg1', 'ohga1', 'ostrd1', 'tca1', 
+
+
+measurements
+'bmi_s1', 'height', 'hip',
+ 'waist', 'weight', 'diasbp', 'systbp', 'chol', 'hdl', 'trig', 'fev1', 'fvc', 'ai_all', 'ahi_a0h3', 'ahi_a0h3a', 'ahi_a0h4', 'ahi
+_a0h4a', 'ahi_c0h3', 'ahi_c0h3a', 'ahi_c0h4', 'ahi_c0h4a', 'ahi_o0h3', 'ahi_o0h3a', 'ahi_o0h4', 'ahi_o0h4a', 'cai0p', 'oahi', 'oa
+i0p', 'rdi0p', 'rdi3p', 'rdi3pa', 'rdi4p', 'rdinr3p', 'rdirem3p', 'nsupinep', 'pctlt75', 'pctlt80', 'pctlt85', 'pctlt90', 'slp_ef
+f', 'slp_lat', 'slpprdp', 'slptime', 'supinep', 'times34p', 'timest1p', 'timest2p', 'waso'
+
