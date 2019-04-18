@@ -26,13 +26,13 @@ object Main {
     val (subject, demographics, medical_history, medication) = loadRddRawData(spark)
 
     val subjectGraph = GraphLoader.load(subject, demographics, medical_history, medication)
-    subjectGraph.cache()
+//    subjectGraph.cache()
 
     println(Jaccard.jaccardSimilarityOneVsAll(subjectGraph, 9))
     println(RandomWalk.randomWalkOneVsAll(subjectGraph, 9))
 
     val similarities = Jaccard.jaccardSimilarityAllPatients(subjectGraph)
-    similarities.cache()
+//    similarities.cache()
 
     val PICLabels = PowerIterationClustering.runPIC(similarities)
 
