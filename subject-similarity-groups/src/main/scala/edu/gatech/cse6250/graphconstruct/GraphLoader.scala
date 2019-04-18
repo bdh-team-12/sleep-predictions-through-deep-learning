@@ -1,7 +1,3 @@
-/**
- * @author Hang Su <hangsu@gatech.edu>.
- */
-
 package edu.gatech.cse6250.graphconstruct
 
 import edu.gatech.cse6250.model._

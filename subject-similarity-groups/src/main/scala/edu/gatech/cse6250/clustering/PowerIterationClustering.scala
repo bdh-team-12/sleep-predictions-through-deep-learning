@@ -28,7 +28,7 @@ object PowerIterationClustering {
   def runPIC(similarities: RDD[(Long, Long, Double)]): RDD[(Long, Int)] = {
     val sc = similarities.sparkContext
 
-    val model = new PIC().setK(3).setMaxIterations(100).setInitializationMode("degree").run(similarities)
+    val model = new PIC().setK(5).setMaxIterations(100).setInitializationMode("degree").run(similarities)
     val clusters = model.assignments.map(x => (x.id, x.cluster))
     clusters
   }
