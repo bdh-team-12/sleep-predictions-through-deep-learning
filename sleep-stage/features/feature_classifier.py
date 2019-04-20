@@ -2,14 +2,20 @@ import torch
 import torch.utils.data
 import torch.optim
 import torch.nn as nn
+import numpy
+import time
+
+from utils import *
+from plots import *
 
 import shhs.polysomnography.polysomnography_reader as ps
+
 
 # Takes sleep stage data and encodes it into more salient features
 class SleepStageAutoEncoder(nn.Module):
     def __init__(self, n_input):
         super(SleepStageAutoEncoder, self).__init__()
-        n_hidden_1 = n_input*0.75
+        n_hidden_1 = n_input * 0.75
         n_hidden_2 = n_hidden_1 * 0.5
         self.encoder = nn.Sequential(
             nn.Linear(n_input, n_hidden_1),
@@ -31,49 +37,58 @@ def generate_feature_classifier_data_loader(epoch_data, feature_window, batch_si
     raw_events = [epoch.events[:, 2] for epoch in epoch_data]
 
     # Split event data into windows to identify features
-    windows = [event_sample[i:i+feature_window]
+    windows = [event_sample[i:i + feature_window]
                for event_sample in raw_events
                for i in range(0,
                               len(event_sample),
                               feature_window)]
     windows = [window for window in windows if len(window) == feature_window]
 
-    # Convert event arrays into torch tensor dataset
+    # Convert event arrays into torch tensor [identity] dataset
     tens = torch.tensor(windows)
-    dataset = torch.utils.data.TensorDataset(tens)
+    dataset = torch.utils.data.TensorDataset(tens, tens)
 
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return loader
 
 
-def train_feature_classifier(feature_width, dataloader, num_epochs=50):
+def train_feature_classifier(feature_width, data_loader, num_epochs=50):
+    best_val_acc = 0.0
+    train_losses, train_accuracies = [], []
+    valid_losses, valid_accuracies = [], []
+
     encoder = SleepStageAutoEncoder(n_input=feature_width)
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(encoder.parameters())
 
-    for epoch in range(num_epochs):
-        for data in dataloader:
-            train_x, train_y = data
-            # ===================forward=====================
-            output = encoder(train_x)
-            loss = criterion(output, train_x)
-            MSE_loss = nn.MSELoss()(output, train_x)
-            # ===================backward====================
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-        # ===================log========================
-        print('epoch [{}/{}], loss:{:.4f}, MSE_loss:{:.4f}'
-              .format(epoch + 1, num_epochs, loss.data[0], MSE_loss.data[0]))
+    encoder.train()
 
-    torch.save(encoder.state_dict(), './autoencoder.pth')
+    for epoch in range(num_epochs):
+        train_loss, train_accuracy = train(encoder, device, data_loader, criterion, optimizer, epoch, print_freq=100)
+        valid_loss, valid_accuracy, valid_results = evaluate(encoder, device, data_loader, criterion)
+
+        train_losses.append(train_loss)
+        valid_losses.append(valid_loss)
+
+        train_accuracies.append(train_accuracy)
+        valid_accuracies.append(valid_accuracy)
+
+        if valid_accuracy > best_val_acc:
+            best_val_acc = valid_accuracy
+
+    plot_learning_curves(train_losses, valid_losses, train_accuracies, valid_accuracies)
+    # torch.save(encoder.state_dict(), './autoencoder.pth')
     return encoder
+
+
+
 
 
 def main():
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
     epochs = ps.load_shhs_epoch_data(edf_path, ann_path)
+    loader = generate_feature_classifier_data_loader(epochs, feature_window=10, batch_size=10)
 
 
 if __name__ == "__name__":
