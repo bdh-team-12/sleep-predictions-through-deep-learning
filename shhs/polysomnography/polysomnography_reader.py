@@ -26,6 +26,14 @@ def load_shhs_raw_annotated_edfs(edf_path, annotations_path):
     return annotated_edfs
 
 
+def load_shhs_epoch_data(edf_path, annotations_path):
+    raw_edfs = load_shhs_raw_annotated_edfs(edf_path=edf_path, annotations_path=annotations_path)
+
+    events_and_id = [(raw, sleep_stage_events(raw)) for raw in raw_edfs]
+    epochs = [sleep_stage_epochs(raw, events, event_ids) for (raw, events, event_ids) in events_and_id]
+    return epochs
+
+
 def nsrr_sleep_stage_components(xml_file_path):
     stages_elements = xn.parse_nsrr_sleep_stages(xml_file_path)
 
@@ -50,11 +58,11 @@ def nsrr_sleep_stage_annotations(xml_file_path):
 
 def sleep_stage_events(raw, event_id=None, chunk_duration=30.):
     if event_id is None:
-        event_id = {'Wake|0': 1,
-                    'Stage 1 sleep|1': 2,
-                    'Stage 2 sleep|2': 3,
-                    'Stage 3 sleep|3': 4,
-                    'REM sleep|5': 5}
+        event_id = {'Wake|0': 0,
+                    'Stage 1 sleep|1': 1,
+                    'Stage 2 sleep|2': 2,
+                    'Stage 3 sleep|3': 3,
+                    'REM sleep|5': 4}
 
     events_out, event_ids_out = mne.events_from_annotations(raw,
                                                             event_id=event_id,
