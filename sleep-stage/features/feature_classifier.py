@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as functional
 
+import shhs.polysomnography.polysomnography_reader as ps
 
 # Takes sleep stage data and encodes it into more salient features
 class SleepStageAutoEncoder(nn.Module):
@@ -25,6 +25,10 @@ class SleepStageAutoEncoder(nn.Module):
         return x
 
 
+def generate_data_loader(edf_data):
+    break
+
+
 def train_sleep_stage_auto_encoder(feature_width, dataloader, num_epochs=50):
     encoder = SleepStageAutoEncoder(n_input=feature_width)
     criterion = nn.BCELoss()
@@ -32,7 +36,7 @@ def train_sleep_stage_auto_encoder(feature_width, dataloader, num_epochs=50):
 
     for epoch in range(num_epochs):
         for data in dataloader:
-            train_x, train_y_maybe = data
+            train_x, train_y = data
             # ===================forward=====================
             output = encoder(train_x)
             loss = criterion(output, train_x)
@@ -47,3 +51,13 @@ def train_sleep_stage_auto_encoder(feature_width, dataloader, num_epochs=50):
 
     torch.save(encoder.state_dict(), './autoencoder.pth')
     return encoder
+
+
+def main():
+    edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
+    ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
+    data = ps.load_shhs_raw_annotated_edfs(edf_path, ann_path)
+
+
+if __name__ == "__name__":
+    main()

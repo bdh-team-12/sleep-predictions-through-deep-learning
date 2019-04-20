@@ -1,6 +1,29 @@
 import mne
 from shhs.parser import xml_nsrr as xn
 import numpy as np
+import os
+
+
+def load_shhs_raw_annotated_edfs(edf_path, annotations_path):
+    # Find edf file paths
+    edf_file_paths = []
+    for file in os.listdir(edf_path):
+        if file.endswith(".edf"):
+            edf_file_paths.append(os.path.join(edf_path))
+
+    # Find annotation file paths
+    annotation_file_paths = []
+    for file in os.listdir(annotations_path):
+        if file.endswith(".xml"):
+            annotation_file_paths.append(os.path.join(annotations_path))
+
+    # Match edf paths to annotation paths and generate annotated edf objects
+    annotated_edfs = [annotated_raw_edf(edf_file_path=edf, annotations_file_path=ann)
+                      for ann in annotation_file_paths
+                      for edf in edf_file_paths
+                      if ann.split("-|.")[1] == edf.split("-|.")[1]]
+
+    return annotated_edfs
 
 
 def nsrr_sleep_stage_components(xml_file_path):
