@@ -14,6 +14,7 @@ from shhs.polysomnography import polysomnography_reader as pr
 import mne
 from mne.datasets.sleep_physionet.age import fetch_data
 from mne.time_frequency import psd_array_welch
+from sklearn.metrics import *
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -33,6 +34,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import glob
 import math
+from sklearn.utils import class_weight
 
 def eeg_power_band_shhs(epochs):
     """EEG relative power band feature extraction.
@@ -91,8 +93,8 @@ def add_pre_post(data):
     df4=df.shift(2).fillna(0)
     df5=df.shift(-2).fillna(0)
     df_diff1=df.subtract(df2, fill_value=0)
-    df_diff2=df.subtract(df3, fill_value=0)    
-    dffinal=pd.concat([df, df2,df3], axis=1)
+    df_diff2=df.subtract(df3, fill_value=0)   
+    dffinal=pd.concat([df,df2,df3], axis=1)
     return dffinal.values
 '''read data'''
 
@@ -137,7 +139,7 @@ def preparedata(sampling_rate,proportions = (0.5, 0.2, 0.3)):
                 epochs = pr.sleep_stage_epochs(raw=raw, events=events, event_id=event_id).load_data()
                 x_train=eeg_power_band_shhs(epochs)
                 x_train2=add_pre_post(x_train)
-                y_train = epochs.events[:, 2]-1
+                y_train = (epochs.events[:, 2]-1)
                 if x_train.shape[1]==12:                 
                     try:
                         _ = X_train.shape
@@ -169,7 +171,7 @@ def preparedata(sampling_rate,proportions = (0.5, 0.2, 0.3)):
                 epochs = pr.sleep_stage_epochs(raw=raw, events=events, event_id=event_id).load_data()
                 x_valid=eeg_power_band_shhs(epochs)
                 x_valid2=add_pre_post(x_valid)
-                y_valid = epochs.events[:, 2]-1
+                y_valid = (epochs.events[:, 2]-1)
                 if x_valid.shape[1]==12:                 
                     try:
                         _ = X_valid.shape
@@ -202,7 +204,7 @@ def preparedata(sampling_rate,proportions = (0.5, 0.2, 0.3)):
                 epochs = pr.sleep_stage_epochs(raw=raw, events=events, event_id=event_id).load_data()
                 x_test=eeg_power_band_shhs(epochs)
                 x_test2=add_pre_post(x_test)
-                y_test = epochs.events[:, 2]-1
+                y_test = (epochs.events[:, 2]-1)
                 if x_test.shape[1]==12:                 
                     try:
                         _ = X_test.shape
@@ -222,14 +224,21 @@ X_train=scaler.transform(X_train)
 X_valid=scaler.transform(X_valid)
 X_test=scaler.transform(X_test)
 
+np.save('X_train.npy', X_train)
+np.save('X_valid.npy', X_valid)
+np.save('X_test.npy', X_test)
+np.save('Y_train.npy', Y_train)
+np.save('Y_valid.npy', Y_valid)
+np.save('Y_test.npy', Y_test)
+
 """
 : count unique values
 unique, counts = np.unique(y_train, return_counts=True)
 np.asarray((unique, counts)).T
 """
-MODEL_TYPE = 'MLP'  # TODO: Change this to 'MLP', 'CNN', or 'RNN' according to your task
+MODEL_TYPE = 'CNN'  # TODO: Change this to 'MLP', 'CNN', or 'RNN' according to your task
 NUM_EPOCHS = 15
-BATCH_SIZE = 200
+BATCH_SIZE = 100
 USE_CUDA = False  # Set 'True' if you want to use GPU
 NUM_WORKERS = 0
 def load_dataset(data,labels, model_type):
@@ -342,6 +351,46 @@ class MyCNN(nn.Module):
         x = self.fc3(x)
         return x
 
+class MyCNN2(nn.Module):
+    ''' initial model
+    def __init__(self):
+        super(MyCNN, self).__init__()
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=6, kernel_size=5)
+        self.pool1 = nn.MaxPool1d(kernel_size=2)
+        self.conv2 = nn.Conv1d(6, 16, 5)
+        self.pool2 = nn.MaxPool1d(kernel_size=2)       
+        self.fc1 = nn.Linear(in_features=16 * 41, out_features=128)
+        self.fc2 = nn.Linear(128, 5)
+
+
+    def forward(self, x):
+        x = self.pool1(F.relu(self.conv1(x)))
+        x = self.pool2(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 41)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+        '''
+    def __init__(self):
+        super(MyCNN2, self).__init__()
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=12, kernel_size=5)
+        self.pool1 = nn.MaxPool1d(kernel_size=2)
+        self.conv2 = nn.Conv1d(12, 16, 5)
+        self.pool2 = nn.MaxPool1d(kernel_size=2)
+        self.drop_out = nn.Dropout(0.5)
+        self.fc1 = nn.Linear(in_features=16 * 6, out_features=128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 5)        
+
+
+    def forward(self, x):
+        x = self.pool1(F.relu(self.conv1(x)))
+        x = self.pool2(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 6)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))  
+        x = self.fc3(x)
+        return x
     
 class LSTM(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers=2, dropout=0.2, batch_size=100,gpu=False):
@@ -436,8 +485,10 @@ elif MODEL_TYPE == 'LSTM':
 else:
 	raise AssertionError("Wrong Model Type!")
 
-
-criterion = nn.CrossEntropyLoss()
+np.random.seed(1000)
+weights = [1, 2, 1, 1, 1.1]
+class_weights = torch.FloatTensor(weights)
+criterion = nn.CrossEntropyLoss(weight=class_weights)
 optimizer = optim.Adam(model.parameters())
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -479,4 +530,39 @@ Y_pred=rfc.predict(X_train)
 YP_test=rfc.predict(X_test)
 acc=accuracy_score(YP_test,Y_test)
 acc
+f1score=f1_score(YP_test,Y_test,average="weighted")
+plot_confusion_matrix(list(map(lambda x,y:(x,y),Y_test,YP_test)), class_names)
+
+'''grid search'''
+from sklearn.model_selection import RandomizedSearchCV
+# Number of trees in random forest
+n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
+# Number of features to consider at every split
+max_features = ['auto', 'sqrt']
+# Maximum number of levels in tree
+max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
+max_depth.append(None)
+# Minimum number of samples required to split a node
+min_samples_split = [2, 5, 10]
+# Minimum number of samples required at each leaf node
+min_samples_leaf = [1, 2, 4]
+# Method of selecting samples for training each tree
+bootstrap = [True, False]
+# Create the random grid
+random_grid = {'n_estimators': n_estimators,
+               'max_features': max_features,
+               'max_depth': max_depth,
+               'min_samples_split': min_samples_split,
+               'min_samples_leaf': min_samples_leaf,
+               'bootstrap': bootstrap}
+print(random_grid)
+rf_random = RandomizedSearchCV(estimator = rfc, param_distributions = random_grid, n_iter = 100, cv = 3, verbose=2, random_state=42, n_jobs = -1)
+'''best parameter from grid search'''
+rfc=RandomForestClassifier(n_estimators=600, random_state=42,min_samples_split=5,min_samples_leaf=1,max_features='auto',max_depth=80)
+rfc.fit(X_train, Y_train)
+Y_pred=rfc.predict(X_train)
+YP_test=rfc.predict(X_test)
+acc=accuracy_score(YP_test,Y_test)
+acc
+f1score=f1_score(YP_test,Y_test,average="weighted")
 plot_confusion_matrix(list(map(lambda x,y:(x,y),Y_test,YP_test)), class_names)
