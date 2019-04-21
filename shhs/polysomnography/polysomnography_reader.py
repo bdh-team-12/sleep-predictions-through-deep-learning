@@ -36,7 +36,9 @@ def load_shhs_raw_annotated_edfs(edf_path, annotations_path, limit=-1):
 
 
 def load_shhs_epoch_data(edf_path, annotations_path, limit=-1):
-    raw_edfs = load_shhs_raw_annotated_edfs(edf_path=edf_path, annotations_path=annotations_path, limit=limit)
+    raw_edfs = load_shhs_raw_annotated_edfs(edf_path=edf_path,
+                                            annotations_path=annotations_path,
+                                            limit=limit)
 
     events_and_id = [(raw, sleep_stage_events(raw)) for raw in raw_edfs]
     epochs = [sleep_stage_epochs(raw, event_info[0], event_info[1]) for (raw, event_info) in events_and_id]

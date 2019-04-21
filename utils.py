@@ -35,7 +35,7 @@ def compute_batch_mse(output, target):
     with torch.no_grad():
         batch_size = target.size(0)
         _, pred = output.max(1)
-        errs = [pow(o - t, 2) for (o, t) in zip(output, target)]
+        errs = [pow(o - t, 2) for (o, t) in zip(output, target.float())]
 
         return sum(sum(errs)) / batch_size
 

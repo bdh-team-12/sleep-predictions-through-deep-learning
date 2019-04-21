@@ -2,6 +2,7 @@ import torch
 import torch.utils.data
 import torch.optim
 import torch.nn as nn
+from sklearn.model_selection import train_test_split
 import numpy
 import time
 
@@ -45,20 +46,19 @@ def generate_feature_classifier_data_loader(epoch_data, feature_window, batch_si
     windows = [window for window in windows if len(window) == feature_window]
 
     # Convert event arrays into torch tensor [identity] dataset
-    tens = torch.tensor(windows).float()
-    dataset = torch.utils.data.TensorDataset(tens, tens)
+    tens = torch.tensor(windows)
+    dataset = torch.utils.data.TensorDataset(tens.float(), tens.float())
 
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return loader
 
 
-def train_feature_classifier(feature_width, data_loader, num_epochs=50):
-    best_val_acc = 0.0
+def train_feature_classifier(feature_width, train_data_loader, test_data_loader, num_epochs=50):
     train_losses, train_accuracies = [], []
     valid_losses, valid_accuracies = [], []
 
     encoder = SleepStageAutoEncoder(n_input=feature_width)
-    criterion = nn. MSELoss()
+    criterion = nn.MSELoss(reduction="sum")
     optimizer = torch.optim.Adam(encoder.parameters())
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -68,8 +68,8 @@ def train_feature_classifier(feature_width, data_loader, num_epochs=50):
     encoder.train()
 
     for epoch in range(num_epochs):
-        train_loss, train_accuracy = train(encoder, device, data_loader, criterion, optimizer, epoch, print_freq=100)
-        valid_loss, valid_accuracy, valid_results = evaluate(encoder, device, data_loader, criterion)
+        train_loss, train_accuracy = train(encoder, device, train_data_loader, criterion, optimizer, epoch, print_freq=100)
+        valid_loss, valid_accuracy, valid_results = evaluate(encoder, device, test_data_loader, criterion)
 
         train_losses.append(train_loss)
         valid_losses.append(valid_loss)
@@ -77,20 +77,22 @@ def train_feature_classifier(feature_width, data_loader, num_epochs=50):
         train_accuracies.append(train_accuracy)
         valid_accuracies.append(valid_accuracy)
 
-        if valid_accuracy > best_val_acc:
-            best_val_acc = valid_accuracy
-
     plot_learning_curves(train_losses, valid_losses, train_accuracies, valid_accuracies)
-    # torch.save(encoder.state_dict(), './autoencoder.pth')
+    torch.save(encoder.state_dict(), './autoencoder.pth')
     return encoder
 
 
 def main():
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
-    epochs = ps.load_shhs_epoch_data(edf_path, ann_path, limit=10)
-    loader = generate_feature_classifier_data_loader(epochs, feature_window=10, batch_size=10)
-    enc = train_feature_classifier(feature_width=10, data_loader=loader, num_epochs=10)
+    epochs = ps.load_shhs_epoch_data(edf_path, ann_path, limit=50)
+    train, test = train_test_split(epochs, train_size=0.2)
+    train_loader = generate_feature_classifier_data_loader(train, feature_window=10, batch_size=10)
+    test_loader = generate_feature_classifier_data_loader(test, feature_window=10, batch_size=10)
+    enc = train_feature_classifier(feature_width=10,
+                                   train_data_loader=train_loader,
+                                   test_data_loader=test_loader,
+                                   num_epochs=10)
     print("Done?")
 
 
