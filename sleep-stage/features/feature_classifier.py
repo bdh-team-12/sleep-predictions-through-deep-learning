@@ -34,7 +34,7 @@ class SleepStageAutoEncoder(nn.Module):
         return x
 
 
-def generate_feature_classifier_data_loader(epoch_data, feature_window, batch_size=10):
+def generate_feature_classifier_data_loader(epoch_data, feature_window, batch_size=10, trim_zeros=False):
     raw_events = [epoch.events[:, 2] for epoch in epoch_data]
 
     # Split event data into windows to identify features
@@ -44,6 +44,9 @@ def generate_feature_classifier_data_loader(epoch_data, feature_window, batch_si
                               len(event_sample),
                               feature_window)]
     windows = [window for window in windows if len(window) == feature_window]
+
+    if trim_zeros:
+        windows = [window for window in windows if sum(window) > 0]
 
     # Convert event arrays into torch tensor [identity] dataset
     tens = torch.tensor(windows)
@@ -58,7 +61,7 @@ def train_feature_classifier(feature_width, train_data_loader, test_data_loader,
     valid_losses, valid_accuracies = [], []
 
     encoder = SleepStageAutoEncoder(n_input=feature_width)
-    criterion = nn.MSELoss(reduction="sum")
+    criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(encoder.parameters())
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -68,7 +71,8 @@ def train_feature_classifier(feature_width, train_data_loader, test_data_loader,
     encoder.train()
 
     for epoch in range(num_epochs):
-        train_loss, train_accuracy = train(encoder, device, train_data_loader, criterion, optimizer, epoch, print_freq=100)
+        train_loss, train_accuracy = train(encoder, device, train_data_loader, criterion, optimizer, epoch,
+                                           print_freq=100)
         valid_loss, valid_accuracy, valid_results = evaluate(encoder, device, test_data_loader, criterion)
 
         train_losses.append(train_loss)
@@ -78,21 +82,37 @@ def train_feature_classifier(feature_width, train_data_loader, test_data_loader,
         valid_accuracies.append(valid_accuracy)
 
     plot_learning_curves(train_losses, valid_losses, train_accuracies, valid_accuracies)
-    torch.save(encoder.state_dict(), './autoencoder.pth')
+    # torch.save(encoder.state_dict(), './autoencoder.pth')
     return encoder
+
+
+def plot_results(encoder, test_loader):
+    criterion = nn.MSELoss()
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    encoder.to(device)
+    criterion.to(device)
+
+    test_loss, test_accuracy, test_results = evaluate(encoder, device, test_loader, criterion)
+
+    class_names = ['1', '2', '3', '4', '5']
+
+    flattened_results = [(r[0][i], r[1][i]) for r in test_results for i in range(len(r[0]))]
+    plot_confusion_matrix(flattened_results, class_names)
 
 
 def main():
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
-    epochs = ps.load_shhs_epoch_data(edf_path, ann_path, limit=50)
+    epochs = ps.load_shhs_epoch_data(edf_path, ann_path, limit=25)
     train, test = train_test_split(epochs, train_size=0.2)
-    train_loader = generate_feature_classifier_data_loader(train, feature_window=10, batch_size=10)
-    test_loader = generate_feature_classifier_data_loader(test, feature_window=10, batch_size=10)
+    train_loader = generate_feature_classifier_data_loader(train, feature_window=10, batch_size=10, trim_zeros=True)
+    test_loader = generate_feature_classifier_data_loader(test, feature_window=10, batch_size=10, trim_zeros=True)
     enc = train_feature_classifier(feature_width=10,
                                    train_data_loader=train_loader,
                                    test_data_loader=test_loader,
                                    num_epochs=10)
+    plot_results(enc, test_loader)
     print("Done?")
 
 
