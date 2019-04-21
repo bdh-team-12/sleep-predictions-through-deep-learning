@@ -102,7 +102,7 @@ def new_feature_classifier(edf_path, annotations_path, sample_limit=-1):
 
 
 def save_feature_classifier(model, path):
-    torch.save(model.state_dict(), path)
+    torch.save(model, path)
 
 
 def load_feature_classifier(path):
