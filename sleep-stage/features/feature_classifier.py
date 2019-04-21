@@ -52,12 +52,11 @@ def generate_feature_classifier_data_loader(epoch_data, feature_window, batch_si
     return loader
 
 
-def train_feature_classifier(feature_width, train_data_loader, test_data_loader, num_epochs=50):
+def train_feature_classifier(feature_width, train_data_loader, test_data_loader, num_epochs=50, criterion=nn.MSELoss()):
     train_losses, train_accuracies = [], []
     valid_losses, valid_accuracies = [], []
 
     encoder = SleepStageAutoEncoder(n_input=feature_width)
-    criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(encoder.parameters())
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -78,8 +77,38 @@ def train_feature_classifier(feature_width, train_data_loader, test_data_loader,
         valid_accuracies.append(valid_accuracy)
 
     plot_learning_curves(train_losses, valid_losses, train_accuracies, valid_accuracies)
-    # torch.save(encoder.state_dict(), './autoencoder.pth')
     return encoder
+
+
+def new_feature_classifier(edf_path, annotations_path, sample_limit=-1):
+    epochs = ps.load_shhs_epoch_data(edf_path, annotations_path, limit=sample_limit)
+    train_test, validation = train_test_split(epochs, train_size=0.2)
+    train, test = train_test_split(train_test, train_size=0.2)
+
+    train_loader = generate_feature_classifier_data_loader(train, feature_window=10, batch_size=10, trim_zeros=True)
+    test_loader = generate_feature_classifier_data_loader(test, feature_window=10, batch_size=10, trim_zeros=False)
+    validation_loader = generate_feature_classifier_data_loader(validation,
+                                                                feature_window=10,
+                                                                batch_size=10,
+                                                                trim_zeros=False)
+    enc = train_feature_classifier(feature_width=10,
+                                   train_data_loader=train_loader,
+                                   test_data_loader=test_loader,
+                                   num_epochs=10)
+    plot_results(enc, validation_loader)
+
+    enc.eval()
+    return enc
+
+
+def save_feature_classifier(model, path):
+    torch.save(model.state_dict(), path)
+
+
+def load_feature_classifier(path):
+    model = torch.load(path)
+    model.eval()
+    return model
 
 
 def plot_results(encoder, test_loader):
@@ -100,21 +129,10 @@ def plot_results(encoder, test_loader):
 def main():
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
-    epochs = ps.load_shhs_epoch_data(edf_path, ann_path, limit=150)
-    train_test, validation = train_test_split(epochs, train_size=0.2)
-    train, test = train_test_split(train_test, train_size=0.2)
-
-    train_loader = generate_feature_classifier_data_loader(train, feature_window=10, batch_size=10, trim_zeros=True)
-    test_loader = generate_feature_classifier_data_loader(test, feature_window=10, batch_size=10, trim_zeros=False)
-    validation_loader = generate_feature_classifier_data_loader(validation,
-                                                                feature_window=10,
-                                                                batch_size=10,
-                                                                trim_zeros=False)
-    enc = train_feature_classifier(feature_width=10,
-                                   train_data_loader=train_loader,
-                                   test_data_loader=test_loader,
-                                   num_epochs=10)
-    plot_results(enc, validation_loader)
+    enc = new_feature_classifier(edf_path, ann_path)
+    path = './autoencoder.pth'
+    save_feature_classifier(enc, path)
+    identical = load_feature_classifier(path)
     print("Done?")
 
 
