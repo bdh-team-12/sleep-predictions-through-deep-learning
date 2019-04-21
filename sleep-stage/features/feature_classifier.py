@@ -1,12 +1,11 @@
-import torch.utils.data
-import torch.optim
 import torch.nn as nn
+import torch.optim
+import torch.utils.data
 from sklearn.model_selection import train_test_split
 
-from utils import *
-from plots import *
-
 import shhs.polysomnography.polysomnography_reader as ps
+from plots import *
+from utils import *
 
 
 # Takes sleep stage data and encodes it into more salient features
