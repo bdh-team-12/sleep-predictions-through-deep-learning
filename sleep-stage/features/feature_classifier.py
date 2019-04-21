@@ -1,10 +1,7 @@
-import torch
 import torch.utils.data
 import torch.optim
 import torch.nn as nn
 from sklearn.model_selection import train_test_split
-import numpy
-import time
 
 from utils import *
 from plots import *
