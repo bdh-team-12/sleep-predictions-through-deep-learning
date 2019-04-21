@@ -30,11 +30,21 @@ def compute_batch_accuracy(output, target):
         return correct * 100.0 / batch_size
 
 
+def compute_batch_mse(output, target):
+    """Computes the mean-squared-error for a batch"""
+    with torch.no_grad():
+        batch_size = target.size(0)
+        _, pred = output.max(1)
+        errs = [pow(o - t, 2) for (o, t) in zip(output, target)]
+
+        return sum(sum(errs)) / batch_size
+
+
 def train(model, device, data_loader, criterion, optimizer, epoch, print_freq=10):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
-    accuracy = AverageMeter()
+    mse = AverageMeter()
 
     model.train()
 
@@ -62,24 +72,24 @@ def train(model, device, data_loader, criterion, optimizer, epoch, print_freq=10
         end = time.time()
 
         losses.update(loss.item(), target.size(0))
-        accuracy.update(compute_batch_accuracy(output, target).item(), target.size(0))
+        mse.update(compute_batch_mse(output, target).item(), target.size(0))
 
         if i % print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                   'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Accuracy {acc.val:.3f} ({acc.avg:.3f})'.format(
+                  'MSE {mse.val:.3f} ({mse.avg:.3f})'.format(
                 epoch, i, len(data_loader), batch_time=batch_time,
-                data_time=data_time, loss=losses, acc=accuracy))
+                data_time=data_time, loss=losses, mse=mse))
 
-    return losses.avg, accuracy.avg
+    return losses.avg, mse.avg
 
 
 def evaluate(model, device, data_loader, criterion, print_freq=10):
     batch_time = AverageMeter()
     losses = AverageMeter()
-    accuracy = AverageMeter()
+    mse = AverageMeter()
 
     results = []
 
@@ -102,7 +112,7 @@ def evaluate(model, device, data_loader, criterion, print_freq=10):
             end = time.time()
 
             losses.update(loss.item(), target.size(0))
-            accuracy.update(compute_batch_accuracy(output, target).item(), target.size(0))
+            mse.update(compute_batch_mse(output, target).item(), target.size(0))
 
             y_true = target.detach().to('cpu').numpy().tolist()
             y_pred = output.detach().to('cpu').max(1)[1].numpy().tolist()
@@ -112,7 +122,7 @@ def evaluate(model, device, data_loader, criterion, print_freq=10):
                 print('Test: [{0}/{1}]\t'
                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Accuracy {acc.val:.3f} ({acc.avg:.3f})'.format(
-                    i, len(data_loader), batch_time=batch_time, loss=losses, acc=accuracy))
+                      'MSE {mse.val:.3f} ({mse.avg:.3f})'.format(
+                    i, len(data_loader), batch_time=batch_time, loss=losses, mse=mse))
 
-    return losses.avg, accuracy.avg, results
+    return losses.avg, mse.avg, results

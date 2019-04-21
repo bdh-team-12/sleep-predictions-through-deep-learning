@@ -2,35 +2,44 @@ import mne
 from shhs.parser import xml_nsrr as xn
 import numpy as np
 import os
+import re
 
 
-def load_shhs_raw_annotated_edfs(edf_path, annotations_path):
+def load_shhs_raw_annotated_edfs(edf_path, annotations_path, limit=-1):
     # Find edf file paths
     edf_file_paths = []
     for file in os.listdir(edf_path):
         if file.endswith(".edf"):
-            edf_file_paths.append(os.path.join(edf_path))
+            edf_file_paths.append(file)
 
     # Find annotation file paths
     annotation_file_paths = []
     for file in os.listdir(annotations_path):
         if file.endswith(".xml"):
-            annotation_file_paths.append(os.path.join(annotations_path))
+            annotation_file_paths.append(file)
 
     # Match edf paths to annotation paths and generate annotated edf objects
-    annotated_edfs = [annotated_raw_edf(edf_file_path=edf, annotations_file_path=ann)
-                      for ann in annotation_file_paths
-                      for edf in edf_file_paths
-                      if ann.split("-|.")[1] == edf.split("-|.")[1]]
+    annotated_edfs = []
+    for ann in annotation_file_paths:
+        matches = [edf for edf in edf_file_paths if re.split("-|\.", ann)[1] == re.split("-|\.", edf)[1]]
+        if len(matches) == 0:
+            continue
+
+        edf = matches[0]
+        annotated_edfs.append(annotated_raw_edf(edf_file_path=os.path.join(edf_path, edf),
+                                                annotations_file_path=os.path.join(annotations_path, ann)))
+
+        if len(annotated_edfs) == limit:
+            break
 
     return annotated_edfs
 
 
-def load_shhs_epoch_data(edf_path, annotations_path):
-    raw_edfs = load_shhs_raw_annotated_edfs(edf_path=edf_path, annotations_path=annotations_path)
+def load_shhs_epoch_data(edf_path, annotations_path, limit=-1):
+    raw_edfs = load_shhs_raw_annotated_edfs(edf_path=edf_path, annotations_path=annotations_path, limit=limit)
 
     events_and_id = [(raw, sleep_stage_events(raw)) for raw in raw_edfs]
-    epochs = [sleep_stage_epochs(raw, events, event_ids) for (raw, events, event_ids) in events_and_id]
+    epochs = [sleep_stage_epochs(raw, event_info[0], event_info[1]) for (raw, event_info) in events_and_id]
     return epochs
 
 

@@ -15,8 +15,8 @@ import shhs.polysomnography.polysomnography_reader as ps
 class SleepStageAutoEncoder(nn.Module):
     def __init__(self, n_input):
         super(SleepStageAutoEncoder, self).__init__()
-        n_hidden_1 = n_input * 0.75
-        n_hidden_2 = n_hidden_1 * 0.5
+        n_hidden_1 = round(n_input * 0.75)
+        n_hidden_2 = round(n_hidden_1 * 0.5)
         self.encoder = nn.Sequential(
             nn.Linear(n_input, n_hidden_1),
             nn.ReLU(True),
@@ -45,7 +45,7 @@ def generate_feature_classifier_data_loader(epoch_data, feature_window, batch_si
     windows = [window for window in windows if len(window) == feature_window]
 
     # Convert event arrays into torch tensor [identity] dataset
-    tens = torch.tensor(windows)
+    tens = torch.tensor(windows).float()
     dataset = torch.utils.data.TensorDataset(tens, tens)
 
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -58,8 +58,12 @@ def train_feature_classifier(feature_width, data_loader, num_epochs=50):
     valid_losses, valid_accuracies = [], []
 
     encoder = SleepStageAutoEncoder(n_input=feature_width)
-    criterion = nn.BCELoss()
+    criterion = nn. MSELoss()
     optimizer = torch.optim.Adam(encoder.parameters())
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    encoder.to(device)
+    criterion.to(device)
 
     encoder.train()
 
@@ -81,15 +85,14 @@ def train_feature_classifier(feature_width, data_loader, num_epochs=50):
     return encoder
 
 
-
-
-
 def main():
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
-    epochs = ps.load_shhs_epoch_data(edf_path, ann_path)
+    epochs = ps.load_shhs_epoch_data(edf_path, ann_path, limit=10)
     loader = generate_feature_classifier_data_loader(epochs, feature_window=10, batch_size=10)
+    enc = train_feature_classifier(feature_width=10, data_loader=loader, num_epochs=10)
+    print("Done?")
 
 
-if __name__ == "__name__":
+if __name__ == "__main__":
     main()
