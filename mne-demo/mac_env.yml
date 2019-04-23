@@ -1,9 +1,13 @@
 name: mne
 channels:
+- pytorch
 - defaults
 dependencies:
 - python<3.7
 - pip
+- pytorch>=1.0.0
+- torchvision
+- scikit-learn
 - mkl
 - numpy
 - scipy
