@@ -19,13 +19,13 @@ object Jaccard {
      * Return a List of top 10 patient IDs ordered by the highest to the lowest similarity.
      * For ties, random order is okay. The given patientID should be excluded from the result.
      */
-    val srcPatientOnly = graph.triplets.filter(x => x.srcAttr.isInstanceOf[PatientProperty])
+    val srcPatientOnly = graph.triplets.filter(x => x.srcAttr.isInstanceOf[SubjectProperty])
     val patientSet: RDD[(Long, String)] = srcPatientOnly.map { triplet =>
       triplet.dstAttr match {
-        case l: LabResultProperty =>
-          (triplet.srcId, l.testName)
-        case d: DiagnosticProperty =>
-          (triplet.srcId, d.icd9code)
+        case l: DemographicProperty =>
+          (triplet.srcId, l.classifier)
+        case d: MedicalHistoryProperty =>
+          (triplet.srcId, d.condition)
         case m: MedicationProperty =>
           (triplet.srcId, m.medicine)
         case _ =>
@@ -58,13 +58,13 @@ object Jaccard {
      * patient-1-id < patient-2-id to avoid duplications
      */
 
-    val srcPatientOnly = graph.triplets.filter(x => x.srcAttr.isInstanceOf[PatientProperty])
+    val srcPatientOnly = graph.triplets.filter(x => x.srcAttr.isInstanceOf[SubjectProperty])
     val patientSet: RDD[(Long, String)] = srcPatientOnly.map { triplet =>
       triplet.dstAttr match {
-        case l: LabResultProperty =>
-          (triplet.srcId, l.testName)
-        case d: DiagnosticProperty =>
-          (triplet.srcId, d.icd9code)
+        case l: DemographicProperty =>
+          (triplet.srcId, l.classifier)
+        case d: MedicalHistoryProperty =>
+          (triplet.srcId, d.condition)
         case m: MedicationProperty =>
           (triplet.srcId, m.medicine)
         case _ =>

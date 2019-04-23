@@ -1,7 +1,7 @@
 import sbtassembly.AssemblyKeys.{assemblyJarName, assemblyMergeStrategy}
 import sbtassembly.{MergeStrategy, PathList}
 
-lazy val projectName = "big-data-hw4"
+lazy val projectName = "shhs"
 lazy val projectVersion = "1.1.0"
 lazy val projectOrganization = "org.sunlab"
 lazy val projectScalaVersion = "2.11.12"
