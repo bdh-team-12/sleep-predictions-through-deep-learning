@@ -11,7 +11,7 @@ import scipy.signal as ssignal
 import os
 import matplotlib.pyplot as plt
 """this is from Blake's code"""      
-from shhs.polysomnography import polysomnography_reader as pr
+import shhs.polysomnography.polysomnography_reader as ps
 import mne
 from mne.datasets.sleep_physionet.age import fetch_data
 from mne.time_frequency import psd_array_welch
