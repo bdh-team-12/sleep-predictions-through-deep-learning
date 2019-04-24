@@ -26,10 +26,14 @@ from mne.time_frequency import psd_array_welch
 from sklearn.preprocessing import FunctionTransformer    
 from sklearn.preprocessing import StandardScaler
 
-import glob
-import math
-from sklearn.utils import class_weight
+from sklearn.metrics import *
 
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+
+import pickle
 def eeg_power_band_shhs(epochs):
     """EEG relative power band feature extraction.
 
@@ -111,13 +115,29 @@ def preparedata(filename):
 
 filename = 'D:/Documents/GaTech/CSE 6250 Big data for Health/Term project/Ruby for download/shhs/polysomnography/edfs/shhs1/shhs1-200006.edf'
 PATH_TRAIN_FILE = "../output"
+MODEL_TYPE = 'RFC'
+PATH_OUTPUT = "../output/model/"
+Score_output="../output"
+
+
 X_train=np.load(os.path.join(PATH_TRAIN_FILE, 'X_train.npy'))
 X_score=preparedata(filename)
 '''standardize based on X_train'''
-
 scaler=StandardScaler()
 scaler.fit(X_train)
 X_score=scaler.transform(X_score)
 
-
 np.save(os.path.join(PATH_TRAIN_FILE, 'X_score.npy'), X_score)
+X_score=np.load(os.path.join(PATH_TRAIN_FILE, 'X_score.npy'))
+
+
+if MODEL_TYPE == 'RFC':
+    save_file = 'RFC.sav'
+    RFC = pickle.load(open(os.path.join(PATH_OUTPUT, save_file), 'rb'))
+    YP_test=RFC.predict(X_score)
+    score_result = 'score.csv'
+    output_file = open(os.path.join(Score_output, score_result), 'w')
+    output_file.write("stages\n")
+    for y in YP_test:
+        output_file.write("{}\n".format(y))
+    output_file.close()
