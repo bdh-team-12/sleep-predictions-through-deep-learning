@@ -1,6 +1,48 @@
 import mne
 from shhs.parser import xml_nsrr as xn
 import numpy as np
+import os
+import re
+
+
+def load_shhs_raw_annotated_edfs(edf_path, annotations_path, limit=-1):
+    # Find edf file paths
+    edf_file_paths = []
+    for file in os.listdir(edf_path):
+        if file.endswith(".edf"):
+            edf_file_paths.append(file)
+
+    # Find annotation file paths
+    annotation_file_paths = []
+    for file in os.listdir(annotations_path):
+        if file.endswith(".xml"):
+            annotation_file_paths.append(file)
+
+    # Match edf paths to annotation paths and generate annotated edf objects
+    annotated_edfs = []
+    for ann in annotation_file_paths:
+        matches = [edf for edf in edf_file_paths if re.split("-|\.", ann)[1] == re.split("-|\.", edf)[1]]
+        if len(matches) == 0:
+            continue
+
+        edf = matches[0]
+        annotated_edfs.append(annotated_raw_edf(edf_file_path=os.path.join(edf_path, edf),
+                                                annotations_file_path=os.path.join(annotations_path, ann)))
+
+        if len(annotated_edfs) == limit:
+            break
+
+    return annotated_edfs
+
+
+def load_shhs_epoch_data(edf_path, annotations_path, limit=-1):
+    raw_edfs = load_shhs_raw_annotated_edfs(edf_path=edf_path,
+                                            annotations_path=annotations_path,
+                                            limit=limit)
+
+    events_and_id = [(raw, sleep_stage_events(raw)) for raw in raw_edfs]
+    epochs = [sleep_stage_epochs(raw, event_info[0], event_info[1]) for (raw, event_info) in events_and_id]
+    return epochs
 
 
 def nsrr_sleep_stage_components(xml_file_path):
@@ -27,11 +69,11 @@ def nsrr_sleep_stage_annotations(xml_file_path):
 
 def sleep_stage_events(raw, event_id=None, chunk_duration=30.):
     if event_id is None:
-        event_id = {'Wake|0': 1,
-                    'Stage 1 sleep|1': 2,
-                    'Stage 2 sleep|2': 3,
-                    'Stage 3 sleep|3': 4,
-                    'REM sleep|5': 5}
+        event_id = {'Wake|0': 0,
+                    'Stage 1 sleep|1': 1,
+                    'Stage 2 sleep|2': 2,
+                    'Stage 3 sleep|3': 3,
+                    'REM sleep|5': 4}
 
     events_out, event_ids_out = mne.events_from_annotations(raw,
                                                             event_id=event_id,
