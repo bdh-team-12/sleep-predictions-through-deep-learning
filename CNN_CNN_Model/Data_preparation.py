@@ -28,11 +28,7 @@ import math
 shhs_base_dir = 'D:/Documents/GaTech/CSE 6250 Big data for Health/Term project/Ruby for download/shhs/polysomnography'
 output_dir="./data_npz"
 
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
-else:
-    shutil.rmtree(output_dir)
-    os.makedirs(output_dir)
+os.makedirs(output_dir, exist_ok=True)
     
 def preparedata(sampling_rate):
     preprocessed_names = glob(os.path.join(shhs_base_dir, 'edfs','shhs1', '*.edf'))

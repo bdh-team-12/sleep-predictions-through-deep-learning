@@ -7,7 +7,7 @@ from tqdm import tqdm
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 def get_base_model():
-    inp = Input(shape=(3750, 1))
+    inp = Input(shape=(202, 1))
     img_1 = Convolution1D(16, kernel_size=5, activation=activations.relu, padding="valid")(inp)
     img_1 = Convolution1D(16, kernel_size=5, activation=activations.relu, padding="valid")(img_1)
     img_1 = MaxPool1D(pool_size=2)(img_1)
@@ -37,7 +37,7 @@ def get_base_model():
 def get_model_cnn():
     nclass = 5
 
-    seq_input = Input(shape=(None, 3750, 1))
+    seq_input = Input(shape=(None, 202, 1))
     base_model = get_base_model()
     # for layer in base_model.layers:
     #     layer.trainable = False

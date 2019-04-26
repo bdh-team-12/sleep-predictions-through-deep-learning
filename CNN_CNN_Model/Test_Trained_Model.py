@@ -6,8 +6,8 @@ Created on Wed Apr 24 14:11:51 2019
 """
 import numpy as np
 import pandas as pd
-import glob
 import os
+import glob
 from glob import glob
 from Models import get_base_model,get_model_cnn
 from keras import optimizers, losses, activations, models
@@ -24,7 +24,7 @@ from plots import plot_learning_curves, plot_confusion_matrix
 data_path = "./data_npz"
 files = sorted(glob(os.path.join(data_path, "*.npz")))
 file_path = "cnn_model.h5"
-epochs=30
+
 
 ids = sorted(list(set([x.split("\\")[-1][:12] for x in files])))
 #split by test subject
@@ -40,17 +40,6 @@ test_dict = {k: np.load(k) for k in test}
 val_dict = {k: np.load(k) for k in val}
 
 model = get_model_cnn()
-
-
-# model.load_weights(file_path)
-
-checkpoint = ModelCheckpoint(file_path, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-early = EarlyStopping(monitor="val_acc", mode="max", patience=20, verbose=1)
-redonplat = ReduceLROnPlateau(monitor="val_acc", mode="max", patience=5, verbose=2)
-callbacks_list = [checkpoint, early, redonplat]  # early
-
-model.fit_generator(gen(train_dict, aug=False), validation_data=gen(val_dict), epochs=epochs, verbose=2,
-                    steps_per_epoch=1000, validation_steps=300, callbacks=callbacks_list)
 model.load_weights(file_path)
 
 '''for test model'''

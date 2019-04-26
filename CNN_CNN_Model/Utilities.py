@@ -44,11 +44,15 @@ def eeg_power_band_shhs(epochs):
 
     sfreq = epochs.info['sfreq']
     data = epochs.load_data().pick_channels(EEG_CHANNELS).get_data()*100000
+    psds, freqs = psd_array_welch(data, sfreq, fmin=0.5, fmax=50.,
+                                  n_fft=512, n_overlap=256)
+    # Normalize the PSDs
+    psds /= np.sum(psds, axis=-1, keepdims=True)
     
-    return data
+    return psds*5
 
 def rescale_array(X):
-    X = X
+    X = X*5
     X = np.clip(X, -5, 5)
     return X
 
