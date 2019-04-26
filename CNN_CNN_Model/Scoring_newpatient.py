@@ -38,7 +38,7 @@ from Utilities import *
 from pathlib import Path
 filename = 'D:/Documents/GaTech/CSE 6250 Big data for Health/Term project/Ruby for download/shhs/polysomnography/edfs/shhs1/shhs1-200006.edf'    
 
-output_dir=Path('./score_npz')
+output_dir=Path('./score_result')
 print(output_dir)
 model_name = "cnn_model.h5"
 
