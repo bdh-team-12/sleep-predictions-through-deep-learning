@@ -29,6 +29,8 @@ from mne.datasets.sleep_physionet.age import fetch_data
 from mne.time_frequency import psd_array_welch
 from Utilities import eeg_power_band_shhs
 from Models import get_base_model,get_model_cnn
+import sys
+sys.path.append("..")
 import shhs.polysomnography.polysomnography_reader as pr
 import glob
 from glob import glob
