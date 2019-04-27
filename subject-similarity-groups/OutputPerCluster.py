@@ -80,7 +80,7 @@ def cluster_risk_factors():
             row = cluster_outcomes.loc[cluster_outcomes['ClusterID'] == cluster_id]
             row = row.apply(lambda r: r * match * 100)
             t = track_results(outcome_dict, "Coronary Heart Disease", row)
-
+            # TODO make this work to find the sum of each CVD risk factor
             # cvd_results[cluster_id] = (match * row["Coronary Heart Disease"].values[0] * 100,
             #                            match * row["Congestive Heart Failure"].values[0] * 100,
             #                            match * row["Coronary Artery Bypass Graft Surgeries"].values[0] * 100,
