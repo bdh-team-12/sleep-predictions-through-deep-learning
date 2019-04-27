@@ -4,7 +4,7 @@ import numpy as np
 
 
 def create_model():
-    data = pd.read_csv('SubjectSimilarities.scala.csv', delimiter=',', encoding="utf-8-sig")
+    data = pd.read_csv('output/SubjectSimilarities.scala.csv', delimiter=',', encoding="utf-8-sig")
     print(data.head(5))
     print(data.columns)
     n = max(data['first'].unique()) + 1
@@ -27,7 +27,7 @@ def write_output(output):
 
     print("Writing output...")
 
-    with open('clusterID.csv', mode='w') as employee_file:
+    with open('output/clusterID.csv', mode='w') as employee_file:
         W = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         W.writerow(['patientID', 'clusterID'])
         for i in range(len(output)):
