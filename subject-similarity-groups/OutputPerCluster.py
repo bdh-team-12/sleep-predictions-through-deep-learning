@@ -62,16 +62,9 @@ def write_output(stuff, h):
     process_file('output/ClusterOutcomes.csv')
     print("Success")
 
-def track_results(dict, column, row):
-    try:
-        dict[column] = dict[column].values[0] + row[column].values[0]
-    except:
-        dict[column] = row[column].values[0]
-    return dict
-
 def cluster_risk_factors():
     cluster_outcomes = pd.read_csv('output/ClusterOutcomes.csv')
-    outcome_dict = {}
+    rows = []
     with open('output/ClusterSimilarities.csv', mode='r') as similarities:
         lines = similarities.readlines()
         for line in lines[1:]:
@@ -79,7 +72,7 @@ def cluster_risk_factors():
             match = float(line.split(",")[1])
             row = cluster_outcomes.loc[cluster_outcomes['ClusterID'] == cluster_id]
             row = row.apply(lambda r: r * match * 100)
-            t = track_results(outcome_dict, "Coronary Heart Disease", row)
+            rows.append(row)
             # TODO make this work to find the sum of each CVD risk factor
             # cvd_results[cluster_id] = (match * row["Coronary Heart Disease"].values[0] * 100,
             #                            match * row["Congestive Heart Failure"].values[0] * 100,
@@ -88,7 +81,8 @@ def cluster_risk_factors():
             #                            match * row["Myocardial Infractions"].values[0] * 100,
             #                            match * row["Stroke"].values[0] * 100,
             #                            match * row["is_alive"].values[0] * 100)
-
+    for i in range(len(rows)):
+        print(i)
 
 if __name__ == "__main__":
     csd_types = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
