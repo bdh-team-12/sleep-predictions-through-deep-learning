@@ -54,19 +54,48 @@ def process_file(filename):
 def write_output(stuff, h):
     print("Writing output...")
 
-    with open('output/ClusterOutcomes.csv', mode='w') as employee_file:
-        W = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    with open('output/ClusterOutcomes.csv', mode='w') as cluster_file:
+        W = csv.writer(cluster_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         W.writerow(h)
         for i in range(0, stuff.shape[0]):
             W.writerow(stuff[i, :])
     process_file('output/ClusterOutcomes.csv')
     print("Success")
 
+def track_results(dict, column, row):
+    try:
+        dict[column] = dict[column].values[0] + row[column].values[0]
+    except:
+        dict[column] = row[column].values[0]
+    return dict
+
+def cluster_risk_factors():
+    cluster_outcomes = pd.read_csv('output/ClusterOutcomes.csv')
+    outcome_dict = {}
+    with open('output/ClusterSimilarities.csv', mode='r') as similarities:
+        lines = similarities.readlines()
+        for line in lines[1:]:
+            cluster_id = int(line.split(",")[0])
+            match = float(line.split(",")[1])
+            row = cluster_outcomes.loc[cluster_outcomes['ClusterID'] == cluster_id]
+            row = row.apply(lambda r: r * match * 100)
+            t = track_results(outcome_dict, "Coronary Heart Disease", row)
+
+            # cvd_results[cluster_id] = (match * row["Coronary Heart Disease"].values[0] * 100,
+            #                            match * row["Congestive Heart Failure"].values[0] * 100,
+            #                            match * row["Coronary Artery Bypass Graft Surgeries"].values[0] * 100,
+            #                            match * row["Congestive Heart Failure"].values[0] * 100,
+            #                            match * row["Myocardial Infractions"].values[0] * 100,
+            #                            match * row["Stroke"].values[0] * 100,
+            #                            match * row["is_alive"].values[0] * 100)
+
 
 if __name__ == "__main__":
-    use = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
-    data = do_stuff(use)
+    csd_types = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
+    data = do_stuff(csd_types)
     header = ['ClusterID', 'Coronary Heart Disease', 'Congestive Heart Failure',
               'Coronary Artery Bypass Graft Surgeries', 'Congestive Heart Failure', 'Myocardial Infractions', 'Stroke',
               'is_alive']
     write_output(data, header)
+    print("Finding risk factors...")
+    cluster_risk_factors()
