@@ -12,33 +12,31 @@ df_medical_history = df_raw[['prev_hx_stroke','angina15','ca15','cabg15','copd15
 df_medication = df_raw[['ace1', 'aced1', 'anar1a1', 'anar1b1', 'anar1c1', 'anar31', 'benzod1', 'beta1', 'betad1', 'ccb1', 'diuret1', 'htnmed1', 'insuln1', 'istrd1', 'lipid1', 'nsaid1', 'ntca1', 'ntg1', 'ohga1', 'ostrd1', 'tca1']].dropna()
 
 def write_to_csv(row, fileName,header):
-    tmpname='data/'+fileName+'.tmp'
-    csvname='data/'+fileName+'.csv'
-    with open(tmpname, 'a') as data:
+    with open(fileName + '.tmp', 'a') as data:
         for i in range(0, len(row.index)):
             data.write(str(row.index[i]) + ',' + row.name + ',' + str(row.values[i]) + '\n')
         print(row.name)
     # remove duplicate lines
     lines_seen = set() # holds lines already seen
-    outfile = open(csvname, "w")
+    outfile = open(fileName + '.csv', "w")
     outfile.write(header)
-    for line in open(tmpname, "r"):
+    for line in open(fileName + '.tmp', "r"):
         if line not in lines_seen: # not a duplicate
             outfile.write(line)
             lines_seen.add(line)
     outfile.close()
 
 def write_df_demographic_to_csv(row):
-    write_to_csv(row, "DEMOGRAPHICS",'nsrrid,classifier,value\n')
+    write_to_csv(row, "data/DEMOGRAPHICS",'nsrrid,classifier,value\n')
 
 def write_df_medical_history_to_csv(row):
-    write_to_csv(row, "MEDICAL_HISTORY",'nsrrid,condition,value\n')
+    write_to_csv(row, "data/MEDICAL_HISTORY",'nsrrid,condition,value\n')
 
 def write_df_medication_to_csv(row):
-    write_to_csv(row, "MEDICATION",'nsrrid,medicine,value\n')
+    write_to_csv(row, "data/MEDICATION",'nsrrid,medicine,value\n')
     
 def write_df_subject_to_csv(row):
-    write_to_csv(row, "SUBJECTS",'nsrrid,idtype,pptid\n')
+    write_to_csv(row, "data/SUBJECTS",'nsrrid,idtype,pptid\n')
     
 if __name__ == "__main__":
     print('Executing as Main')
