@@ -62,7 +62,7 @@ def write_output(stuff, h):
     process_file('output/ClusterOutcomes.csv')
     print("Success")
 
-def cluster_risk_factors():
+def cluster_risk_factors(header):
     cluster_outcomes = pd.read_csv('output/ClusterOutcomes.csv')
     rows = []
     with open('output/ClusterSimilarities.csv', mode='r') as similarities:
@@ -82,7 +82,8 @@ def cluster_risk_factors():
             #                            match * row["Stroke"].values[0] * 100,
             #                            match * row["is_alive"].values[0] * 100)
     for i in range(len(rows)):
-        print(i)
+        for h in header:
+            print(rows[i][h])
 
 if __name__ == "__main__":
     csd_types = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
@@ -92,4 +93,4 @@ if __name__ == "__main__":
               'is_alive']
     write_output(data, header)
     print("Finding risk factors...")
-    cluster_risk_factors()
+    cluster_risk_factors(header)
