@@ -7,7 +7,6 @@ import edu.gatech.cse6250.graphconstruct.GraphLoader
 import edu.gatech.cse6250.helper.{ CSVHelper, SparkHelper }
 import edu.gatech.cse6250.jaccard.Jaccard
 import edu.gatech.cse6250.model.{ SubjectProperty, Demographic, MedicalHistory, Medication }
-import edu.gatech.cse6250.randomwalk.RandomWalk
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -20,21 +19,23 @@ object Main {
 
     val spark = SparkHelper.spark
     val sc = spark.sparkContext
-    //  val sqlContext = spark.sqlContext
+    val sqlContext = spark.sqlContext
+    import sqlContext.implicits._
+    import org.apache.spark.sql.functions._
 
     /** initialize loading of data */
     val (subject, demographics, medical_history, medication) = loadRddRawData(spark)
 
     val subjectGraph = GraphLoader.load(subject, demographics, medical_history, medication)
-//    subjectGraph.cache()
-
-    println(Jaccard.jaccardSimilarityOneVsAll(subjectGraph, 9))
-    println(RandomWalk.randomWalkOneVsAll(subjectGraph, 9))
 
     val similarities = Jaccard.jaccardSimilarityAllPatients(subjectGraph)
-//    similarities.cache()
 
-    val PICLabels = PowerIterationClustering.runPIC(similarities)
+    // save to SubjectSimilarities
+    similarities.toDF().coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").save("SubjectSimilarities.scala.csv")
+    //    hdfs dfs -get hdfs://bootcamp.local:9000/user/root/SubjectSimilarities.scala.csv SubjectSimilarities.scala.csv                    
+
+    // PIC needed too much resource -> use python instead
+    //val PICLabels = PowerIterationClustering.runPIC(similarities)
 
     sc.stop()
   }
