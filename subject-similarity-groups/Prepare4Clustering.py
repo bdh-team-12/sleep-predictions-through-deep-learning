@@ -114,7 +114,7 @@ def write_output(output):
 
     print("Writing output...")
 
-    with open('output/SubjectSimilarities.csv', mode='w') as employee_file:
+    with open('output/SubjectSimilarities.scala.csv', mode='w') as employee_file:
         W = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         W.writerow(['subject_id1', 'subject_id2', 'similarity'])
         for i in range(output.shape[0]):

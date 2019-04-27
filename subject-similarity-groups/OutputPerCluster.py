@@ -3,8 +3,11 @@ import numpy as np
 import csv
 np.set_printoptions(precision=3)
 
-# Given a
+# Given a ClusterID and similairty file, this script find the weighted
+# CVD outcome risk predictions for a new subject
 
+# INPUT: output/ClusterID.csv, data/shhs-cvd-summary-dataset-0.13.0.csv, output/ClusterSimilarities.csv
+# OUTPUT: Printed CVD Risk Factor Prediction Percents, RiskPrediction.csv
 def do_stuff(fil):
     inputt = pd.read_csv('output/ClusterID.csv')
     clusters = np.sort(inputt['clusterID'].unique())  # we need to know the cluster numbers.
@@ -73,17 +76,23 @@ def cluster_risk_factors(header):
             row = cluster_outcomes.loc[cluster_outcomes['ClusterID'] == cluster_id]
             row = row.apply(lambda r: r * match * 100)
             rows.append(row)
-            # TODO make this work to find the sum of each CVD risk factor
-            # cvd_results[cluster_id] = (match * row["Coronary Heart Disease"].values[0] * 100,
-            #                            match * row["Congestive Heart Failure"].values[0] * 100,
-            #                            match * row["Coronary Artery Bypass Graft Surgeries"].values[0] * 100,
-            #                            match * row["Congestive Heart Failure"].values[0] * 100,
-            #                            match * row["Myocardial Infractions"].values[0] * 100,
-            #                            match * row["Stroke"].values[0] * 100,
-            #                            match * row["is_alive"].values[0] * 100)
-    for i in range(len(rows)):
+
+    with open("output/RiskPrediction.csv", "w") as risk:
+        print("\n=== CVD Risk Factors Predictions ===")
+        risk.write("=== CVD Risk Factors Predictions ===" + "\n")
         for h in header:
-            print(rows[i][h])
+            if h == "ClusterID":
+                continue
+            sum_val = 0.0
+            for i in range(len(rows)):
+                sum_val = sum_val + rows[i][h].values[0]
+            if h == "is_alive":
+                h = "16 Year Mortality Rate"
+                p = round(100.0 - sum_val,2)
+            else:
+                p = round(sum_val,2)
+            print(h + ": " + str(p) + "%")
+            risk.write(h + ": " + str(p) + "%\n")
 
 if __name__ == "__main__":
     csd_types = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']

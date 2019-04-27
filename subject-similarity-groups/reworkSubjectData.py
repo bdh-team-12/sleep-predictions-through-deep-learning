@@ -15,7 +15,7 @@ def write_to_csv(row, fileName):
     # remove duplicate lines
     lines_seen = set() # holds lines already seen
     outfile = open(fileName + '.csv', "w")
-    for line in open(fileName + '.tmp', "r"):ran
+    for line in open(fileName + '.tmp', "r"):
         if line not in lines_seen: # not a duplicate
             outfile.write(line)
             lines_seen.add(line)
