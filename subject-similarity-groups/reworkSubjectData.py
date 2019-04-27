@@ -3,6 +3,7 @@ import os
 # This script converts the shhs1-dataset into separate csv files based on variable categories used for sparkx graphing
 
 df_raw = pd.read_csv('data/shhs1-dataset-0.13.0.csv')
+df_raw.columns = map(str.lower, df_raw.columns)
 df_demographic = df_raw[['age_category_s1', 'age_s1', 'educat', 'ethnicity', 'gender', 'mstat', 'nsrrid', 'pptid', 'race']].dropna()
 df_medical_history = df_raw[['prev_hx_stroke','angina15','ca15','cabg15','copd15','hf15','mi15','othrcs15','pacem15','prev_hx_mi','parrptdiab']].dropna()
 df_medication = df_raw[['ace1', 'aced1', 'anar1a1', 'anar1b1', 'anar1c1', 'anar31', 'benzod1', 'beta1', 'betad1', 'ccb1', 'diuret1', 'htnmed1', 'insuln1', 'istrd1', 'lipid1', 'nsaid1', 'ntca1', 'ntg1', 'ohga1', 'ostrd1', 'tca1']].dropna()
