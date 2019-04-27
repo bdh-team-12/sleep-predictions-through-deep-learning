@@ -19,7 +19,9 @@ object Main {
 
     val spark = SparkHelper.spark
     val sc = spark.sparkContext
-    //  val sqlContext = spark.sqlContext
+    val sqlContext = spark.sqlContext
+    import sqlContext.implicits._
+    import org.apache.spark.sql.functions._
 
     /** initialize loading of data */
     val (subject, demographics, medical_history, medication) = loadRddRawData(spark)
@@ -28,7 +30,12 @@ object Main {
 
     val similarities = Jaccard.jaccardSimilarityAllPatients(subjectGraph)
 
-    val PICLabels = PowerIterationClustering.runPIC(similarities)
+    // save to SubjectSimilarities
+    similarities.toDF().coalesce(1).write.format("com.databricks.spark.csv").option("header", "true").save("SubjectSimilarities.scala.csv")
+    //    hdfs dfs -get hdfs://bootcamp.local:9000/user/root/SubjectSimilarities.scala.csv SubjectSimilarities.scala.csv                    
+
+    // PIC needed too much resource -> use python instead
+    //val PICLabels = PowerIterationClustering.runPIC(similarities)
 
     sc.stop()
   }

@@ -3,8 +3,11 @@ import numpy as np
 import csv
 np.set_printoptions(precision=3)
 
-# Given a
+# Given a ClusterID and similairty file, this script find the weighted
+# CVD outcome risk predictions for a new subject
 
+# INPUT: output/ClusterID.csv, data/shhs-cvd-summary-dataset-0.13.0.csv, output/ClusterSimilarities.csv
+# OUTPUT: Printed CVD Risk Factor Prediction Percents, RiskPrediction.csv
 def do_stuff(fil):
     inputt = pd.read_csv('output/ClusterID.csv')
     clusters = np.sort(inputt['clusterID'].unique())  # we need to know the cluster numbers.
@@ -62,16 +65,9 @@ def write_output(stuff, h):
     process_file('output/ClusterOutcomes.csv')
     print("Success")
 
-def track_results(dict, column, row):
-    try:
-        dict[column] = dict[column].values[0] + row[column].values[0]
-    except:
-        dict[column] = row[column].values[0]
-    return dict
-
-def cluster_risk_factors():
+def cluster_risk_factors(header):
     cluster_outcomes = pd.read_csv('output/ClusterOutcomes.csv')
-    outcome_dict = {}
+    rows = []
     with open('output/ClusterSimilarities.csv', mode='r') as similarities:
         lines = similarities.readlines()
         for line in lines[1:]:
@@ -79,16 +75,24 @@ def cluster_risk_factors():
             match = float(line.split(",")[1])
             row = cluster_outcomes.loc[cluster_outcomes['ClusterID'] == cluster_id]
             row = row.apply(lambda r: r * match * 100)
-            t = track_results(outcome_dict, "Coronary Heart Disease", row)
+            rows.append(row)
 
-            # cvd_results[cluster_id] = (match * row["Coronary Heart Disease"].values[0] * 100,
-            #                            match * row["Congestive Heart Failure"].values[0] * 100,
-            #                            match * row["Coronary Artery Bypass Graft Surgeries"].values[0] * 100,
-            #                            match * row["Congestive Heart Failure"].values[0] * 100,
-            #                            match * row["Myocardial Infractions"].values[0] * 100,
-            #                            match * row["Stroke"].values[0] * 100,
-            #                            match * row["is_alive"].values[0] * 100)
-
+    with open("output/RiskPrediction.csv", "w") as risk:
+        print("\n=== CVD Risk Factors Predictions ===")
+        risk.write("=== CVD Risk Factors Predictions ===" + "\n")
+        for h in header:
+            if h == "ClusterID":
+                continue
+            sum_val = 0.0
+            for i in range(len(rows)):
+                sum_val = sum_val + rows[i][h].values[0]
+            if h == "is_alive":
+                h = "16 Year Mortality Rate"
+                p = round(100.0 - sum_val,2)
+            else:
+                p = round(sum_val,2)
+            print(h + ": " + str(p) + "%")
+            risk.write(h + ": " + str(p) + "%\n")
 
 if __name__ == "__main__":
     csd_types = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
@@ -98,4 +102,4 @@ if __name__ == "__main__":
               'is_alive']
     write_output(data, header)
     print("Finding risk factors...")
-    cluster_risk_factors()
+    cluster_risk_factors(header)
