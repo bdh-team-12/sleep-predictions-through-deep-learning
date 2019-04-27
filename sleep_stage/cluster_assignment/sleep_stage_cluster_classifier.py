@@ -1,7 +1,7 @@
 from sklearn.model_selection import train_test_split
 
 import shhs.polysomnography.polysomnography_reader as ps
-from sleep_stage.features.feature_classifier import load_feature_classifier
+from sleep_stage.features.sleep_stage_auto_encoder import load_feature_classifier
 
 
 def main():
