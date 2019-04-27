@@ -1,5 +1,5 @@
 import pandas as pd
-
+import os
 # This script converts the shhs1-dataset into separate csv files based on variable categories used for sparkx graphing
 
 df_raw = pd.read_csv('data/shhs1-dataset-0.13.0.csv')
@@ -19,16 +19,17 @@ def write_to_csv(row, fileName):
         if line not in lines_seen: # not a duplicate
             outfile.write(line)
             lines_seen.add(line)
+    os.remove(fileName + '.tmp')
     outfile.close()
 
 def write_df_demographic_to_csv(row):
-    write_to_csv(row, "DEMOGRAPHICS")
+    write_to_csv(row, "data/DEMOGRAPHICS")
 
 def write_df_medical_history_to_csv(row):
-    write_to_csv(row, "MEDICAL_HISTORY")
+    write_to_csv(row, "data/MEDICAL_HISTORY")
 
 def write_df_medication_to_csv(row):
-    write_to_csv(row, "MEDICATION")
+    write_to_csv(row, "data/MEDICATION")
 
 if __name__ == "__main__":
     print('Executing as Main')
