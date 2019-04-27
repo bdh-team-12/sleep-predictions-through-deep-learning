@@ -27,7 +27,7 @@ from sklearn.utils import class_weight
 '''read data'''
 
 shhs_base_dir = 'D:/Documents/GaTech/CSE 6250 Big data for Health/Term project/Ruby for download/shhs/polysomnography'
-PATH_OUTPUT = "./output2"
+PATH_OUTPUT = "./output"
 os.makedirs(PATH_OUTPUT, exist_ok=True)
 
 
