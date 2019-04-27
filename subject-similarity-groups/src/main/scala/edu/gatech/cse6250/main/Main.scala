@@ -7,7 +7,6 @@ import edu.gatech.cse6250.graphconstruct.GraphLoader
 import edu.gatech.cse6250.helper.{ CSVHelper, SparkHelper }
 import edu.gatech.cse6250.jaccard.Jaccard
 import edu.gatech.cse6250.model.{ SubjectProperty, Demographic, MedicalHistory, Medication }
-import edu.gatech.cse6250.randomwalk.RandomWalk
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -26,13 +25,8 @@ object Main {
     val (subject, demographics, medical_history, medication) = loadRddRawData(spark)
 
     val subjectGraph = GraphLoader.load(subject, demographics, medical_history, medication)
-//    subjectGraph.cache()
-
-    println(Jaccard.jaccardSimilarityOneVsAll(subjectGraph, 9))
-    println(RandomWalk.randomWalkOneVsAll(subjectGraph, 9))
 
     val similarities = Jaccard.jaccardSimilarityAllPatients(subjectGraph)
-//    similarities.cache()
 
     val PICLabels = PowerIterationClustering.runPIC(similarities)
 

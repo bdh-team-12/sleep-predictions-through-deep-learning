@@ -3,12 +3,13 @@ import numpy as np
 import csv
 np.set_printoptions(precision=3)
 
+# Given a
 
 def do_stuff(fil):
-    inputt = pd.read_csv('ClusterID.csv')
+    inputt = pd.read_csv('output/ClusterID.csv')
     clusters = np.sort(inputt['clusterID'].unique())  # we need to know the cluster numbers.
 
-    with open('shhs-cvd-summary-dataset-0.13.0.csv', newline='') as f:
+    with open('data/shhs-cvd-summary-dataset-0.13.0.csv', newline='') as f:
         reader = csv.reader(f)
         names = next(reader)
 
@@ -18,7 +19,7 @@ def do_stuff(fil):
     c = len(cols) + 1
     death_cols = [12, 13, 23, 9, 11]
 
-    data = np.genfromtxt('shhs-cvd-summary-dataset-0.13.0.csv', delimiter=',', skip_header=1)
+    data = np.genfromtxt('data/shhs-cvd-summary-dataset-0.13.0.csv', delimiter=',', skip_header=1)
     output = np.zeros([len(clusters), c])
 
     i = 0
@@ -35,21 +36,37 @@ def do_stuff(fil):
 
     return output
 
+def process_file(filename):
+    # Overwrite the file, removing empty lines
+    with open(filename, 'r+') as f:
+        lines = f.readlines()
+        f.seek(0)
+        f.writelines(line for line in lines if line.strip())
+        f.truncate()
+    with open(filename, 'r+') as f:
+        lines = f.readlines()
+        f.seek(0)
+        f.writelines(lines[0])
+        for line in lines[1:]:
+            f.writelines(str(int(float(line.split(",")[0]))) + "," + ",".join(line.split(",")[1:]))
+        f.truncate()
 
 def write_output(stuff, h):
     print("Writing output...")
 
-    with open('DEMOGRAPHICS.csv', mode='w') as employee_file:
+    with open('output/ClusterOutcomes.csv', mode='w') as employee_file:
         W = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         W.writerow(h)
-        for i in range(stuff.shape[0]):
+        for i in range(0, stuff.shape[0]):
             W.writerow(stuff[i, :])
+    process_file('output/ClusterOutcomes.csv')
+    print("Success")
 
 
 if __name__ == "__main__":
-    use = ['angina', 'any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
+    use = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
     data = do_stuff(use)
-    header = ['ClusterID', 'Chest Pain', 'Coronary Heart Disease', 'Congestive Heart Failure',
+    header = ['ClusterID', 'Coronary Heart Disease', 'Congestive Heart Failure',
               'Coronary Artery Bypass Graft Surgeries', 'Congestive Heart Failure', 'Myocardial Infractions', 'Stroke',
               'is_alive']
     write_output(data, header)
