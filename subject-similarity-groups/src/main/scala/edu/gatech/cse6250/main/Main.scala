@@ -38,8 +38,9 @@ object Main {
     val sqlContext = spark.sqlContext
     import org.apache.spark.sql.functions._
 
-    var base = "file:///mnt/host/c/Users/Benjamin/Documents/GaTech/sleep-predictions-through-deep-learning/subject-similarity-groups/";
-    //    var base = "";
+    // example of host file path
+    var host_dir = "/mnt/host/c/Users/OMSCS/Documents/GaTech/sleep-predictions-through-deep-learning/subject-similarity-groups/";
+    var base = "file://" + host_dir;
 
     List(base + "data/SUBJECTS.csv", base + "data/DEMOGRAPHICS.csv", base + "data/MEDICAL_HISTORY.csv", base + "data/MEDICATION.csv").foreach(CSVHelper.loadCSVAsTable(spark, _))
 
