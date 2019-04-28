@@ -115,7 +115,7 @@ def evaluate(model, device, data_loader, criterion, print_freq=10):
             mse.update(compute_batch_mse(output, target).item(), target.size(0))
 
             y_true = target.detach().to('cpu').numpy().tolist()
-            y_pred = output.detach().to('cpu').round().numpy().tolist()
+            y_pred = output.detach().to('cpu').max(1)[1].numpy().tolist()
             results.extend(list(zip(y_true, y_pred)))
 
             if i % print_freq == 0:
