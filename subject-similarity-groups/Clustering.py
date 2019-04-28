@@ -7,17 +7,17 @@ def create_model():
     data = pd.read_csv('output/SubjectSimilarities.scala.csv', delimiter=',', encoding="utf-8-sig")
     print(data.head(5))
     print(data.columns)
-    n = max(data['first'].unique()) + 1
+    n = max(data['_1'].unique()) + 1
     matrix = np.zeros([n, n])
 
     for index, row in data.iterrows():
-        matrix[int(row['first']), int(row['second'])-1] = 1 - float(row['similarity'])
-        matrix[int(row['second'])-1, int(row['first'])] = 1 - float(row['similarity'])
+        matrix[int(row['_1']), int(row['_2'])-1] = 1 - float(row['_3'])
+        matrix[int(row['_2'])-1, int(row['_1'])] = 1 - float(row['_3'])
         if index % 10000 == 0:
             print("{0:.0%}".format(index / data.shape[0]))
 
     print("starting clustering...")
-    labels = spectral_clustering(matrix, n_clusters=4, eigen_solver='arpack')
+    labels = spectral_clustering(matrix, n_clusters=5, eigen_solver='arpack')
 
     return labels
 
