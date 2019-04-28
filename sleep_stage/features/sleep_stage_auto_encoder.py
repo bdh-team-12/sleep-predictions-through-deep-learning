@@ -8,25 +8,30 @@ from plots import *
 from utils import *
 
 
-# Takes sleep stage data and encodes it into more salient features
+# Takes sleep stage data and encodes it into more abstract, salient features
 class SleepStageAutoEncoder(nn.Module):
-    def __init__(self, n_input):
+    def __init__(self, feature_window_len):
         super(SleepStageAutoEncoder, self).__init__()
-        n_hidden_1 = round(n_input * 0.75)
+        self.feature_window_len = feature_window_len
+        n_hidden_1 = round(feature_window_len * 0.75)
         n_hidden_2 = round(n_hidden_1 * 0.5)
         self.encoder = nn.Sequential(
-            nn.Linear(n_input, n_hidden_1),
+            nn.Linear(feature_window_len, n_hidden_1),
             nn.ReLU(True),
             nn.Linear(n_hidden_1, n_hidden_2),
             nn.ReLU(True))
         self.decoder = nn.Sequential(
             nn.Linear(n_hidden_2, n_hidden_1),
             nn.ReLU(True),
-            nn.Linear(n_hidden_1, n_input))
+            nn.Linear(n_hidden_1, feature_window_len))
 
     def forward(self, x):
         x = self.encoder(x)
         x = self.decoder(x)
+        return x
+
+    def encode(self, x):
+        x = self.encoder(x)
         return x
 
 
@@ -56,7 +61,7 @@ def train_feature_classifier(feature_width, train_data_loader, test_data_loader,
     train_losses, train_accuracies = [], []
     valid_losses, valid_accuracies = [], []
 
-    encoder = SleepStageAutoEncoder(n_input=feature_width)
+    encoder = SleepStageAutoEncoder(feature_window_len=feature_width)
     optimizer = torch.optim.Adam(encoder.parameters())
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -101,6 +106,23 @@ def new_feature_classifier(edf_path, annotations_path, sample_limit=-1):
     return enc
 
 
+def encode_sleep_stage_epoch(epoch, encoder):
+    raw = epoch.events[:, 2]
+    encode_sleep_stage_sequence(raw, encoder)
+
+
+def encode_sleep_stage_sequence(sleep_stage_sequence, encoder):
+    # Split event data into windows to identify features
+    windows = [sleep_stage_sequence[i:i + encoder.feature_window_len]
+               for i in range(0,
+                              len(sleep_stage_sequence),
+                              encoder.feature_window_len)]
+    windows = [window for window in windows if len(window) == encoder.feature_window_len]
+
+    # Encode sleep stage windows
+    out = [encoder.encode(window) for window in windows]
+
+
 def save_feature_classifier(model, path):
     torch.save(model, path)
 
@@ -129,11 +151,10 @@ def plot_results(encoder, test_loader):
 def main():
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
-    enc = new_feature_classifier(edf_path, ann_path)
+    enc = new_feature_classifier(edf_path, ann_path, sample_limit=50)
     path = './autoencoder.pth'
     save_feature_classifier(enc, path)
     identical = load_feature_classifier(path)
-    print("Done?")
 
 
 if __name__ == "__main__":
