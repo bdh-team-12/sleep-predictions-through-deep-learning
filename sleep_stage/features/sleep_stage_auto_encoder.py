@@ -106,14 +106,16 @@ def new_feature_classifier(edf_path, annotations_path, sample_limit=-1):
     return enc
 
 
-def encode_sleep_stage_epoch(epoch_data, encoder):
-    raw_events = [epoch.events[:, 2] for epoch in epoch_data]
+def encode_sleep_stage_epoch(epoch, encoder):
+    raw = epoch.events[:, 2]
+    encode_sleep_stage_sequence(raw, encoder)
 
+
+def encode_sleep_stage_sequence(sleep_stage_sequence, encoder):
     # Split event data into windows to identify features
-    windows = [event_sample[i:i + encoder.feature_window_len]
-               for event_sample in raw_events
+    windows = [sleep_stage_sequence[i:i + encoder.feature_window_len]
                for i in range(0,
-                              len(event_sample),
+                              len(sleep_stage_sequence),
                               encoder.feature_window_len)]
     windows = [window for window in windows if len(window) == encoder.feature_window_len]
 
@@ -149,10 +151,10 @@ def plot_results(encoder, test_loader):
 def main():
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
-    enc = new_feature_classifier(edf_path, ann_path)
+    enc = new_feature_classifier(edf_path, ann_path, sample_limit=500)
     path = './autoencoder.pth'
-    save_feature_classifier(enc, path)
-    identical = load_feature_classifier(path)
+    # save_feature_classifier(enc, path)
+    # identical = load_feature_classifier(path)
 
 
 if __name__ == "__main__":
