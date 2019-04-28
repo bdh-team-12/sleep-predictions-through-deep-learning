@@ -27,7 +27,7 @@ def write_output(output):
 
     print("Writing output...")
 
-    with open('output/clusterID.csv', mode='w') as employee_file:
+    with open('output/ClusterID.csv', mode='w') as employee_file:
         W = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         W.writerow(['patientID', 'clusterID'])
         for i in range(len(output)):

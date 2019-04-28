@@ -86,8 +86,7 @@ def cluster_risk_factors(header):
             sum_val = 0.0
             for i in range(len(rows)):
                 sum_val = sum_val + rows[i][h].values[0]
-            if h == "is_alive":
-                h = "16 Year Mortality Rate"
+            if h == "16 Year Mortality Rate":
                 p = round(100.0 - sum_val,2)
             else:
                 p = round(sum_val,2)
@@ -97,9 +96,9 @@ def cluster_risk_factors(header):
 if __name__ == "__main__":
     csd_types = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
     data = do_stuff(csd_types)
-    header = ['ClusterID', 'Coronary Heart Disease', 'Congestive Heart Failure',
+    header = ['ClusterID', 'Any Coronary Heart Disease', 'Any Cardiovascular Disease',
               'Coronary Artery Bypass Graft Surgeries', 'Congestive Heart Failure', 'Myocardial Infractions', 'Stroke',
-              'is_alive']
+              '16 Year Mortality Rate']
     write_output(data, header)
     print("Finding risk factors...")
     cluster_risk_factors(header)
