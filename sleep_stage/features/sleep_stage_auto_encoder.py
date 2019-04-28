@@ -151,10 +151,10 @@ def plot_results(encoder, test_loader):
 def main():
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
-    enc = new_feature_classifier(edf_path, ann_path, sample_limit=500)
+    enc = new_feature_classifier(edf_path, ann_path, sample_limit=50)
     path = './autoencoder.pth'
-    # save_feature_classifier(enc, path)
-    # identical = load_feature_classifier(path)
+    save_feature_classifier(enc, path)
+    identical = load_feature_classifier(path)
 
 
 if __name__ == "__main__":
