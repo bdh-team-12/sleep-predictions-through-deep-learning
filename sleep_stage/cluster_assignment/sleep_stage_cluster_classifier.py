@@ -8,6 +8,8 @@ from plots import *
 from utils import *
 import torch.nn.functional as F
 
+import pandas as pd
+
 from sleep_stage.features.sleep_stage_auto_encoder import (load_feature_classifier, SleepStageAutoEncoder)
 
 
@@ -89,8 +91,14 @@ def plot_results(model, test_loader, classes):
 def main():
     edf_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/edfs/shhs1"
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
+    clusters_path = "/Users/blakemacnair/dev/data/ClusterID.csv"
     enc_path = "./../features/autoencoder.pth"
     sample_limit = 20
+
+    # Read in cluster assignments
+    data = pd.read_csv(clusters_path, ',')
+    ids = data['patientID'].array
+    clusters = data['clusterID'].array
 
     epochs = ps.load_shhs_epoch_data(edf_path, ann_path, limit=sample_limit)
 
