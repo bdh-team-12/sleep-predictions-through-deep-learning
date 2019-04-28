@@ -97,7 +97,7 @@ if __name__ == "__main__":
     csd_types = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
     data = do_stuff(csd_types)
     header = ['ClusterID', 'Any Coronary Heart Disease', 'Any Cardiovascular Disease',
-              'Coronary Artery Bypass Graft Surgeries', 'Congestive Heart Failure', 'Myocardial Infractions', 'Stroke',
+              'Coronary Artery Bypass Graft Surgeries', 'Congestive Heart Failure', 'Myocardial Infarctions', 'Stroke',
               '16 Year Mortality Rate']
     write_output(data, header)
     print("Finding risk factors...")
