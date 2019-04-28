@@ -86,7 +86,7 @@ def train(model, device, data_loader, criterion, optimizer, epoch, print_freq=10
     return losses.avg, mse.avg
 
 
-def evaluate(model, device, data_loader, criterion, print_freq=10):
+def evaluate(model, device, data_loader, criterion, print_freq=2):
     batch_time = AverageMeter()
     losses = AverageMeter()
     mse = AverageMeter()

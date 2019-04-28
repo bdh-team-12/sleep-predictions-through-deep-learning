@@ -16,23 +16,19 @@ from sleep_stage.features.sleep_stage_auto_encoder import (load_feature_classifi
 class SleepStageClusterClassifier(nn.Module):
     def __init__(self, dim_input, dim_output):
         super(SleepStageClusterClassifier, self).__init__()
-        self.dim_input = dim_input
 
-        # self.fc1 = nn.Linear(dim_input, 100)
-        self.rnn1 = nn.GRU(input_size=1, hidden_size=50, num_layers=1, batch_first=True, dropout=0)
-        self.rnn2 = nn.GRU(input_size=50, hidden_size=32, num_layers=2, batch_first=True, dropout=0.2)
-        self.rnn3 = nn.GRU(input_size=32, hidden_size=16, num_layers=3, batch_first=True, dropout=0.4)
-        self.fc2 = nn.Linear(in_features=16, out_features=dim_output)
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=20, kernel_size=5, stride=1)
+        self.conv2 = nn.Conv1d(in_channels=20, out_channels=40, kernel_size=5, stride=1)
+        self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
+        self.fc1 = nn.Linear(40 * 268, 1000)
+        self.fc2 = nn.Linear(1000, dim_output)
 
     def forward(self, x):
-        # x = F.leaky_relu(self.fc1(x))
-        x, _ = self.rnn1(x)
-        x = torch.sigmoid(x)
-        x, _ = self.rnn2(x)
-        x = torch.sigmoid(x)
-        x, _ = self.rnn3(x)
-        x = torch.sigmoid(x)
-        x = F.leaky_relu(self.fc2(x[:, -1, :]))
+        x = self.pool(F.leaky_relu(self.conv1(x)))
+        x = self.pool(F.leaky_relu(self.conv2(x)))
+        x = x.view(-1, 40 * 268)
+        x = F.leaky_relu(self.fc1(x))
+        x = F.leaky_relu(self.fc2(x))
         return x
 
 
@@ -43,13 +39,13 @@ def generate_event_cluster_data_loader(data, batch_size=10):
 
     seq_tens = torch.tensor(seq).float()
     cluster_tens = torch.tensor(cluster).long()
-    dataset = torch.utils.data.TensorDataset(seq_tens.unsqueeze(2), cluster_tens)
+    dataset = torch.utils.data.TensorDataset(seq_tens.unsqueeze(1), cluster_tens)
 
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return loader
 
 
-def train_cluster_classifier(max_sequence_length, cluster_count, train_data_loader, test_data_loader, num_epochs=5,
+def train_cluster_classifier(max_sequence_length, cluster_count, train_data_loader, test_data_loader, num_epochs=50,
                              criterion=nn.CrossEntropyLoss()):
     train_losses, train_accuracies = [], []
     valid_losses, valid_accuracies = [], []
@@ -93,7 +89,7 @@ def main():
     ann_path = "/Users/blakemacnair/dev/data/shhs/polysomnography/annotations-events-nsrr/shhs1"
     clusters_path = "/Users/blakemacnair/dev/data/ClusterID.csv"
     enc_path = "./../features/autoencoder.pth"
-    sample_limit = 20
+    sample_limit = 200
 
     # Read in cluster assignments
     data = pd.read_csv(clusters_path, ',')
@@ -116,18 +112,19 @@ def main():
     dataset = [(events[i], clusters[i]) for i in range(len(events))]
 
     # Prepare training and testing and validation data
-    # train_test, validation = train_test_split(dataset, train_size=0.2)
-    # train, test = train_test_split(train_test, train_size=0.2)
+    train_test, validation = train_test_split(dataset, train_size=0.5)
+    train, test = train_test_split(train_test, train_size=0.4)
 
     # Create data loaders
-    train_loader = generate_event_cluster_data_loader(dataset, batch_size=10)
-    # test_loader = generate_event_cluster_data_loader(test, batch_size=10)
-    # validation_loader = generate_event_cluster_data_loader(validation, batch_size=10)
+    train_loader = generate_event_cluster_data_loader(train, batch_size=20)
+    test_loader = generate_event_cluster_data_loader(test, batch_size=20)
+    validation_loader = generate_event_cluster_data_loader(validation, batch_size=20)
 
     model = train_cluster_classifier(max_sequence_length=pad_max, cluster_count=max_cluster_id+1,
-                                     train_data_loader=train_loader, test_data_loader=train_loader)
+                                     train_data_loader=train_loader, test_data_loader=test_loader,
+                                     num_epochs=20)
 
-    plot_results(model, train_loader, list(range(max_cluster_id)))
+    plot_results(model, validation_loader, list(range(max_cluster_id)))
 
 
 if __name__ == "__main__":
