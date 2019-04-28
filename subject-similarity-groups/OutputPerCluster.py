@@ -38,14 +38,17 @@ def do_stuff(fil):
         i = i + 1
 
     return output
-
-def process_file(filename):
+def remove_empty_lines(filename):
     # Overwrite the file, removing empty lines
     with open(filename, 'r+') as f:
         lines = f.readlines()
         f.seek(0)
         f.writelines(line for line in lines if line.strip())
         f.truncate()
+
+def process_file(filename):
+    # Overwrite the file, removing empty lines
+    remove_empty_lines(filename)
     with open(filename, 'r+') as f:
         lines = f.readlines()
         f.seek(0)
@@ -68,15 +71,17 @@ def write_output(stuff, h):
 def cluster_risk_factors(header):
     cluster_outcomes = pd.read_csv('output/ClusterOutcomes.csv')
     rows = []
+    with open('output/ClusterCvd.csv', mode='w') as t:
+        pass
     with open('output/ClusterSimilarities.csv', mode='r') as similarities:
         lines = similarities.readlines()
         for line in lines[1:]:
             cluster_id = int(line.split(",")[0])
             match = float(line.split(",")[1])
             row = cluster_outcomes.loc[cluster_outcomes['ClusterID'] == cluster_id]
-            row = row.apply(lambda r: r * match * 100)
+            row = row.apply(lambda r: round(r * match * 100,2))
             rows.append(row)
-
+            row.to_csv('output/ClusterCvd.csv', mode='a', header=False)
     with open("output/RiskPrediction.csv", "w") as risk:
         print("\n=== CVD Risk Factors Predictions ===")
         risk.write("=== CVD Risk Factors Predictions ===" + "\n")
@@ -94,6 +99,7 @@ def cluster_risk_factors(header):
             risk.write(h + ": " + str(p) + "%\n")
 
 if __name__ == "__main__":
+    remove_empty_lines('output/ClusterID.csv')
     csd_types = ['any_chd', 'any_cvd', 'cabg', 'chf', 'mi', 'stroke', 'vital']
     data = do_stuff(csd_types)
     header = ['ClusterID', 'Any Coronary Heart Disease', 'Any Cardiovascular Disease',
